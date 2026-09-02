@@ -149,26 +149,13 @@ export function drawSonarScene(canvas, { seed = 1, nadir = 'center', objects = [
   }
 }
 
-// A handful of named placeholder scenes reused across the app until real
-// sonar tiles are available. Keyed by scan-line id so each screen shows
-// a consistent (if fake) image for the same line.
-export const PLACEHOLDER_SCENES = {
-  'L-0184': { seed: 5, nadir: 'center', objects: [
-    { type: 'net', x: 0.485, y: 0.39, w: 0.09, h: 0.14 },
-    { type: 'cylinder', x: 0.68, y: 0.66, w: 0.045, h: 0.08 },
-    { type: 'rock', x: 0.18, y: 0.2, w: 0.05, h: 0.06 },
-  ]},
-  'L-0183': { seed: 12, nadir: 'center', objects: [
-    { type: 'rock', x: 0.3, y: 0.5, w: 0.06, h: 0.08 },
-  ]},
-  'L-0182': { seed: 23, nadir: 'center', objects: [
-    { type: 'pipe', x: 0.5, y: 0.44, w: 0.3, h: 0.035 },
-  ]},
-  'L-0181': { seed: 31, nadir: 'center', objects: [
-    { type: 'cylinder', x: 0.32, y: 0.5, w: 0.05, h: 0.09 },
-  ]},
-  'L-0180': { seed: 44, nadir: 'center', objects: [
-    { type: 'wreck', x: 0.55, y: 0.35, w: 0.055, h: 0.1 },
-  ]},
-  'L-0179': { seed: 51, nadir: 'center', objects: [] },
+// Deterministic string -> integer seed, so a given scan-line id or image
+// path always renders the same placeholder texture instead of a new random
+// one on every re-render.
+export function seedFromString(str) {
+  let h = 0
+  for (let i = 0; i < (str || '').length; i++) {
+    h = (Math.imul(h, 31) + str.charCodeAt(i)) | 0
+  }
+  return Math.abs(h) || 1
 }

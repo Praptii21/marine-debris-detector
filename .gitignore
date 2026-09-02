@@ -2,3 +2,16 @@ node_modules
 dist
 .DS_Store
 *.local
+.env
+
+# Backend — model weights and generated annotation data are not source
+backend/__pycache__/
+backend/**/__pycache__/
+backend/.venv/
+backend/venv/
+backend/models/**/*.pt
+backend/annotations/images/*
+!backend/annotations/images/.gitkeep
+backend/annotations/labels/*
+!backend/annotations/labels/.gitkeep
+backend/annotations/rejected.jsonl

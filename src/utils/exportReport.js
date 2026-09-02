@@ -8,6 +8,8 @@
 // well) or move report generation server-side and point these buttons at
 // a download endpoint instead.
 
+import { classLabel } from './taxonomy.js'
+
 function buildReport(survey, detections) {
   return {
     survey_id: survey?.id ?? null,
@@ -19,14 +21,14 @@ function buildReport(survey, detections) {
       id: d.id,
       line_id: d.lineId,
       site: d.site,
-      classification: d.class,
+      classification: classLabel(d.class),
       confidence: d.confidence,
       status: d.status,
-      location: { latitude: d.location.lat, longitude: d.location.lon },
+      location: d.location ? { latitude: d.location.lat, longitude: d.location.lon } : null,
       bounding_box: {
-        width_m: d.boundingBoxM.width,
-        height_m: d.boundingBoxM.height,
-        area_m2: d.areaM2,
+        width_m: d.boundingBoxM?.width ?? null,
+        height_m: d.boundingBoxM?.height ?? null,
+        area_m2: d.areaM2 ?? null,
       },
       acoustic_shadow_m: d.acousticShadowM,
       slant_range_m: d.slantRangeM,
@@ -59,8 +61,8 @@ function toCsv(report) {
     d.classification,
     d.confidence,
     d.status,
-    d.location.latitude,
-    d.location.longitude,
+    d.location?.latitude ?? '',
+    d.location?.longitude ?? '',
     d.bounding_box.width_m,
     d.bounding_box.height_m,
     d.bounding_box.area_m2,

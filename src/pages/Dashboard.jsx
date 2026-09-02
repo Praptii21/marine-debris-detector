@@ -1,36 +1,50 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getSurvey, getScanLines, getDetections } from '../api/client.js'
+import { getSurvey, getScanLines, getDetections, getHealth } from '../api/client.js'
 import SonarCanvas from '../components/SonarCanvas.jsx'
 import StatCard from '../components/StatCard.jsx'
 import StatusTag from '../components/StatusTag.jsx'
-import { PLACEHOLDER_SCENES } from '../utils/sonarRender.js'
+import ConfidenceChart from '../components/ConfidenceChart.jsx'
+import { classColor, classLabel } from '../utils/taxonomy.js'
 
-const CLASS_COLORS = {
-  'Ghost fishing net': 'var(--ocean)',
-  'Anchor / chain': 'var(--amber)',
-  'Pipe segment': 'var(--amber)',
-  'Unknown anomaly': 'var(--ink-faint)',
+const MODEL_KEYS = ['crab_pot', 'shipwreck', 'mine']
+const FALLBACK_MODEL_LABELS = {
+  crab_pot: 'Crab Pot Detector',
+  shipwreck: 'Shipwreck Detector',
+  mine: 'Mine Detector',
 }
 
 export default function Dashboard() {
   const [survey, setSurvey] = useState(null)
   const [lines, setLines] = useState([])
   const [detections, setDetections] = useState([])
+  const [health, setHealth] = useState(null)
+  const [healthError, setHealthError] = useState(false)
 
   useEffect(() => {
     getSurvey().then(setSurvey)
     getScanLines().then(setLines)
     getDetections().then(setDetections)
+    getHealth()
+      .then(setHealth)
+      .catch(() => setHealthError(true))
   }, [])
 
   const flagged = detections.length
-  const unreviewed = detections.filter((d) => d.status === 'unreviewed' || d.status === 'queued').length
+  const unreviewed = detections.filter((d) => d.status === 'needs-review').length
   const classCounts = detections.reduce((acc, d) => {
     acc[d.class] = (acc[d.class] || 0) + 1
     return acc
   }, {})
   const maxClassCount = Math.max(1, ...Object.values(classCounts))
+
+  const activeModelCount = MODEL_KEYS.filter((k) => health?.models?.[k]?.loaded).length
+  const engineValue = health ? `${activeModelCount}/${MODEL_KEYS.length}` : 'Active'
+  const engineFoot = health
+    ? `${activeModelCount} of ${MODEL_KEYS.length} detection models active`
+    : healthError
+      ? 'Backend unreachable'
+      : 'running on survey-vessel hardware'
 
   return (
     <div>
@@ -49,7 +63,12 @@ export default function Dashboard() {
         <StatCard label="Lines processed" value={lines.length} foot="+12 in the last hour" />
         <StatCard label="Flagged anomalies" value={flagged} foot={`${unreviewed} awaiting review`} footTone="warn" />
         <StatCard label="Seafloor covered" value="61.4" unit="km²" foot={survey?.area || ''} />
-        <StatCard label="Detection engine" value="Active" foot="running on survey-vessel hardware" />
+        <StatCard
+          label="Detection engine"
+          value={engineValue}
+          foot={engineFoot}
+          footTone={healthError || (health && activeModelCount < MODEL_KEYS.length) ? 'warn' : undefined}
+        />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 18, alignItems: 'start' }}>
@@ -75,7 +94,7 @@ export default function Dashboard() {
                     <td className="primary mono">
                       <Link to={`/review/${l.id}`} style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'inherit', textDecoration: 'none' }}>
                         <div style={{ width: 44, height: 32, borderRadius: 6, overflow: 'hidden', background: '#04121a', flex: 'none' }}>
-                          <SonarCanvas scene={PLACEHOLDER_SCENES[l.id]} />
+                          <SonarCanvas imageSrc={l.imageSrc} seed={l.id} />
                         </div>
                         {l.id}
                       </Link>
@@ -101,7 +120,7 @@ export default function Dashboard() {
             </div>
             <div>
               {detections
-                .filter((d) => d.status === 'unreviewed' || d.status === 'queued')
+                .filter((d) => d.status === 'needs-review')
                 .map((d) => (
                   <Link
                     key={d.id}
@@ -114,17 +133,22 @@ export default function Dashboard() {
                         alignSelf: 'stretch',
                         borderRadius: 2,
                         flex: 'none',
-                        background: d.status === 'unreviewed' ? 'var(--coral)' : 'var(--amber)',
+                        background: 'var(--coral)',
                       }}
                     />
-                    {d.class} · {d.lineId}
+                    {classLabel(d.class)} · {d.lineId}
                     <span className="mono" style={{ marginLeft: 'auto', flex: 'none', color: 'var(--ink-faint)' }}>
-                      {(d.confidence * 100).toFixed(0)}%
+                      {d.confidence != null ? `${(d.confidence * 100).toFixed(0)}%` : '—'}
                     </span>
                   </Link>
                 ))}
+              {unreviewed === 0 && (
+                <div style={{ padding: '14px 20px', fontSize: 12.5, color: 'var(--ink-faint)' }}>Nothing awaiting review.</div>
+              )}
             </div>
           </div>
+
+          <ConfidenceChart detections={detections} />
 
           <div className="card">
             <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
@@ -133,15 +157,41 @@ export default function Dashboard() {
             <div style={{ padding: '6px 0 14px' }}>
               {Object.entries(classCounts).map(([cls, count]) => (
                 <div key={cls} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 20px', fontSize: 12.5 }}>
-                  <span style={{ width: 130, flex: 'none', color: 'var(--ink-dim)' }}>{cls}</span>
+                  <span style={{ width: 130, flex: 'none', color: 'var(--ink-dim)' }}>{classLabel(cls)}</span>
                   <div style={{ flex: 1, height: 5, background: 'var(--ocean-tint)', borderRadius: 3, overflow: 'hidden' }}>
-                    <div style={{ width: `${(count / maxClassCount) * 100}%`, height: '100%', background: CLASS_COLORS[cls] || 'var(--ocean)', borderRadius: 3 }} />
+                    <div style={{ width: `${(count / maxClassCount) * 100}%`, height: '100%', background: classColor(cls), borderRadius: 3 }} />
                   </div>
                   <span className="mono" style={{ width: 20, flex: 'none', textAlign: 'right', color: 'var(--ink-faint)' }}>
                     {count}
                   </span>
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div className="card">
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+              <h3 style={{ fontSize: 16 }}>Model status</h3>
+            </div>
+            <div style={{ padding: '6px 0 14px' }}>
+              {MODEL_KEYS.map((key) => {
+                const m = health?.models?.[key]
+                const active = Boolean(m?.loaded)
+                return (
+                  <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px', fontSize: 12.5 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', flex: 'none', background: active ? 'var(--sage)' : 'var(--ink-faint)' }} />
+                    <span style={{ color: 'var(--ink-dim)' }}>
+                      {m?.label || FALLBACK_MODEL_LABELS[key]}
+                      {m?.variants?.length > 1 && (
+                        <span style={{ color: 'var(--ink-faint)', marginLeft: 6 }}>· {m.variants.length} variants</span>
+                      )}
+                    </span>
+                    <span className="mono" style={{ marginLeft: 'auto', flex: 'none', fontWeight: 600, color: active ? 'var(--sage)' : 'var(--ink-faint)' }}>
+                      {active ? 'Active' : 'Unavailable'}
+                    </span>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>

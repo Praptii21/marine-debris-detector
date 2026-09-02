@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet'
 import { Link } from 'react-router-dom'
 import { getDetections, getSites } from '../api/client.js'
+import { classLabel } from '../utils/taxonomy.js'
 
 const BASEMAPS = {
   map: {
@@ -38,10 +39,10 @@ const BASEMAPS = {
 }
 
 const STATUS_COLOR = {
-  unreviewed: '#cf5a42',
-  queued: '#b9812a',
-  confirmed: '#3f8a63',
-  cleared: '#3f8a63',
+  'needs-review': '#cf5a42',
+  'auto-confirmed': '#3f8a63',
+  'operator-confirmed': '#1f6fa3',
+  rejected: '#82969e',
 }
 
 export default function MapView() {
@@ -72,7 +73,7 @@ export default function MapView() {
             {BASEMAPS[basemap].layers.map((layer, i) => (
               <TileLayer key={`${basemap}-${i}`} url={layer.url} attribution={layer.attribution} />
             ))}
-            {detections.map((d) => (
+            {detections.filter((d) => d.location).map((d) => (
               <CircleMarker
                 key={d.id}
                 center={[d.location.lat, d.location.lon]}
@@ -86,11 +87,11 @@ export default function MapView() {
               >
                 <Popup>
                   <div style={{ fontFamily: 'var(--font-body)', minWidth: 180 }}>
-                    <div style={{ fontWeight: 600, marginBottom: 4 }}>{d.class}</div>
+                    <div style={{ fontWeight: 600, marginBottom: 4 }}>{classLabel(d.class)}</div>
                     <div className="mono" style={{ fontSize: 12, color: '#4c6672' }}>
                       {d.location.lat.toFixed(4)}, {d.location.lon.toFixed(4)}
                       <br />
-                      confidence {d.confidence.toFixed(2)} · line {d.lineId}
+                      confidence {d.confidence != null ? d.confidence.toFixed(2) : '—'} · line {d.lineId}
                     </div>
                     <Link to={`/review/${d.lineId}`} style={{ display: 'inline-block', marginTop: 8, fontSize: 12.5, fontWeight: 600 }}>
                       Open in review →
@@ -149,9 +150,10 @@ export default function MapView() {
               fontSize: 11.5,
             }}
           >
-            <LegendRow color={STATUS_COLOR.unreviewed} label="Unreviewed / high confidence" />
-            <LegendRow color={STATUS_COLOR.queued} label="Queued for review" />
-            <LegendRow color={STATUS_COLOR.confirmed} label="Confirmed / cleared" />
+            <LegendRow color={STATUS_COLOR['needs-review']} label="Needs review" />
+            <LegendRow color={STATUS_COLOR['auto-confirmed']} label="Auto-confirmed" />
+            <LegendRow color={STATUS_COLOR['operator-confirmed']} label="Operator confirmed" />
+            <LegendRow color={STATUS_COLOR.rejected} label="Rejected" />
           </div>
         </div>
 

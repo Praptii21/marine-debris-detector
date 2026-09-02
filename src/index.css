@@ -20,6 +20,13 @@
   --amber-tint: #f6ecd8;
   --sage: #3f8a63;
   --sage-tint: #e3f2e8;
+  /* Safety-critical (person in water) — distinct from --coral's equipment/
+     ordnance hazard red so the two severities never read as the same thing. */
+  --alert: #d61f56;
+  --alert-tint: #fbe1ea;
+  /* Informational / ruled-out (e.g. NOMBO — confirmed non-mine object). */
+  --slate: #5b7688;
+  --slate-tint: #e6edf1;
 
   --radius: 12px;
   --font-display: 'Source Serif 4', Georgia, serif;
@@ -151,6 +158,51 @@ textarea {
 .tag.ok {
   color: var(--sage);
   background: var(--sage-tint);
+}
+.tag.info {
+  color: var(--ocean-deep);
+  background: var(--ocean-tint);
+}
+.tag.alert {
+  color: var(--alert);
+  background: var(--alert-tint);
+}
+
+.info-tip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  color: var(--ink-faint);
+  font-size: 10.5px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  cursor: default;
+}
+.info-tip .bubble {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 240px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+  padding: 10px 12px;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(15, 39, 51, 0.25);
+  z-index: 20;
+}
+.info-tip:hover .bubble,
+.info-tip:focus-visible .bubble {
+  display: block;
 }
 
 .field label {
