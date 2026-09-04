@@ -7,10 +7,16 @@
 // backend and re-running each sample through POST /detect).
 //
 // These sample images have no known GPS/nav association, so `location` is
-// honestly left null throughout rather than inventing coordinates — the
+// left null by default rather than inventing coordinates — the
 // georeferencing pipeline (backend/georef.py) still works and populates
 // real lat/lon the moment an upload comes with real survey metadata via the
 // Upload page.
+//
+// The exception: detections on L-190/L-194/L-198/L-199 carry deliberately
+// fabricated demo coordinates (a few clusters over the Bay of Bengal off
+// the Chennai coast) so the Map page has something to plot — these are NOT
+// real navigation data, just placeholders for demoing the map's
+// hover-preview / click-to-review interaction.
 //
 // `site` is a generic "Debris sample library" label for the same reason —
 // these aren't tied to one of the fictional survey sites below.
@@ -50,7 +56,7 @@ export const detections = [
     model: "mine_mine-model",
     source: 'model',
     status: classifyConfidence(0.6736, "non_mine_object"),
-    location: null,
+    location: { lat: 13.1512, lon: 80.3634 },
     boundingBoxM: null,
     areaM2: null,
     acousticShadowM: null,
@@ -67,7 +73,7 @@ export const detections = [
     model: "mine_mine-model",
     source: 'model',
     status: classifyConfidence(0.4215, "mine"),
-    location: null,
+    location: { lat: 13.1498, lon: 80.3649 },
     boundingBoxM: null,
     areaM2: null,
     acousticShadowM: null,
@@ -84,7 +90,7 @@ export const detections = [
     model: "shipwreck_ship-model",
     source: 'model',
     status: classifyConfidence(0.3198, "mine"),
-    location: null,
+    location: { lat: 13.1521, lon: 80.3612 },
     boundingBoxM: null,
     areaM2: null,
     acousticShadowM: null,
@@ -152,7 +158,7 @@ export const detections = [
     model: "shipwreck_ship-model",
     source: 'model',
     status: classifyConfidence(0.8459, "shipwreck"),
-    location: null,
+    location: { lat: 13.0206, lon: 80.4223 },
     boundingBoxM: null,
     areaM2: null,
     acousticShadowM: null,
@@ -169,7 +175,7 @@ export const detections = [
     model: "mine_mine-model",
     source: 'model',
     status: classifyConfidence(0.4954, "mine"),
-    location: null,
+    location: { lat: 13.0219, lon: 80.4241 },
     boundingBoxM: null,
     areaM2: null,
     acousticShadowM: null,
@@ -186,7 +192,7 @@ export const detections = [
     model: "shipwreck_ship-model",
     source: 'model',
     status: classifyConfidence(0.301, "shipwreck"),
-    location: null,
+    location: { lat: 13.0193, lon: 80.4207 },
     boundingBoxM: null,
     areaM2: null,
     acousticShadowM: null,
@@ -288,7 +294,7 @@ export const detections = [
     model: "mine_mine-model",
     source: 'model',
     status: classifyConfidence(0.4881, "mine"),
-    location: null,
+    location: { lat: 13.2688, lon: 80.3104 },
     boundingBoxM: null,
     areaM2: null,
     acousticShadowM: null,
@@ -305,7 +311,7 @@ export const detections = [
     model: "mine_mine-model",
     source: 'model',
     status: classifyConfidence(0.4314, "mine"),
-    location: null,
+    location: { lat: 13.2701, lon: 80.3122 },
     boundingBoxM: null,
     areaM2: null,
     acousticShadowM: null,
@@ -322,7 +328,7 @@ export const detections = [
     model: "mine_mine-model",
     source: 'model',
     status: classifyConfidence(0.3976, "mine"),
-    location: null,
+    location: { lat: 13.2675, lon: 80.3089 },
     boundingBoxM: null,
     areaM2: null,
     acousticShadowM: null,
@@ -339,7 +345,7 @@ export const detections = [
     model: "mine_mine-model",
     source: 'model',
     status: classifyConfidence(0.3431, "mine"),
-    location: null,
+    location: { lat: 13.2712, lon: 80.3115 },
     boundingBoxM: null,
     areaM2: null,
     acousticShadowM: null,
@@ -356,7 +362,7 @@ export const detections = [
     model: "mine_mine-model",
     source: 'model',
     status: classifyConfidence(0.2754, "mine"),
-    location: null,
+    location: { lat: 13.2693, lon: 80.3097 },
     boundingBoxM: null,
     areaM2: null,
     acousticShadowM: null,
@@ -373,7 +379,7 @@ export const detections = [
     model: "mine_mine-model",
     source: 'model',
     status: classifyConfidence(0.7418, "non_mine_object"),
-    location: null,
+    location: { lat: 12.8912, lon: 80.3924 },
     boundingBoxM: null,
     areaM2: null,
     acousticShadowM: null,
@@ -390,7 +396,7 @@ export const detections = [
     model: "mine_mine-model",
     source: 'model',
     status: classifyConfidence(0.7195, "non_mine_object"),
-    location: null,
+    location: { lat: 12.8927, lon: 80.3941 },
     boundingBoxM: null,
     areaM2: null,
     acousticShadowM: null,
@@ -407,7 +413,7 @@ export const detections = [
     model: "shipwreck_ship-model",
     source: 'model',
     status: classifyConfidence(0.4857, "shipwreck"),
-    location: null,
+    location: { lat: 12.8899, lon: 80.3908 },
     boundingBoxM: null,
     areaM2: null,
     acousticShadowM: null,
@@ -424,7 +430,7 @@ export const detections = [
     model: "shipwreck_ship-model",
     source: 'model',
     status: classifyConfidence(0.3211, "shipwreck"),
-    location: null,
+    location: { lat: 12.8934, lon: 80.3956 },
     boundingBoxM: null,
     areaM2: null,
     acousticShadowM: null,

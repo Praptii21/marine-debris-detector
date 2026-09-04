@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet'
-import { Link } from 'react-router-dom'
-import { getDetections, getSites } from '../api/client.js'
+import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet'
+import { useNavigate } from 'react-router-dom'
+import { getDetections, getScanLines, getSites } from '../api/client.js'
+import SonarCanvas from '../components/SonarCanvas.jsx'
 import { classLabel } from '../utils/taxonomy.js'
 
 const BASEMAPS = {
@@ -46,14 +47,19 @@ const STATUS_COLOR = {
 }
 
 export default function MapView() {
+  const navigate = useNavigate()
   const [detections, setDetections] = useState([])
+  const [lines, setLines] = useState([])
   const [sites, setSites] = useState([])
   const [basemap, setBasemap] = useState('map')
 
   useEffect(() => {
     getDetections().then(setDetections)
+    getScanLines().then(setLines)
     getSites().then(setSites)
   }, [])
+
+  const imageByLineId = Object.fromEntries(lines.map((l) => [l.id, l.imageSrc]))
 
   return (
     <div>
@@ -84,20 +90,25 @@ export default function MapView() {
                   fillColor: STATUS_COLOR[d.status] || '#1f6fa3',
                   fillOpacity: 0.9,
                 }}
+                eventHandlers={{
+                  click: () => navigate(`/review/${d.lineId}`),
+                  mouseover: (e) => e.target.setStyle({ radius: 11 }),
+                  mouseout: (e) => e.target.setStyle({ radius: 8 }),
+                }}
               >
-                <Popup>
-                  <div style={{ fontFamily: 'var(--font-body)', minWidth: 180 }}>
-                    <div style={{ fontWeight: 600, marginBottom: 4 }}>{classLabel(d.class)}</div>
-                    <div className="mono" style={{ fontSize: 12, color: '#4c6672' }}>
-                      {d.location.lat.toFixed(4)}, {d.location.lon.toFixed(4)}
-                      <br />
-                      confidence {d.confidence != null ? d.confidence.toFixed(2) : '—'} · line {d.lineId}
+                {/* Hover: preview the source tile + class/confidence. Click/tap: jump straight into Review — no intermediate popup click. */}
+                <Tooltip direction="top" offset={[0, -8]} opacity={1}>
+                  <div style={{ fontFamily: 'var(--font-body)', width: 150 }}>
+                    <div style={{ width: '100%', height: 90, borderRadius: 6, overflow: 'hidden', marginBottom: 6 }}>
+                      <SonarCanvas imageSrc={imageByLineId[d.lineId]} seed={d.lineId} />
                     </div>
-                    <Link to={`/review/${d.lineId}`} style={{ display: 'inline-block', marginTop: 8, fontSize: 12.5, fontWeight: 600 }}>
-                      Open in review →
-                    </Link>
+                    <div style={{ fontWeight: 600, fontSize: 12.5 }}>{classLabel(d.class)}</div>
+                    <div className="mono" style={{ fontSize: 11, color: '#4c6672' }}>
+                      {d.confidence != null ? `${(d.confidence * 100).toFixed(0)}%` : '—'} · {d.lineId}
+                    </div>
+                    <div style={{ fontSize: 10.5, color: '#82969e', marginTop: 3 }}>Click to open →</div>
                   </div>
-                </Popup>
+                </Tooltip>
               </CircleMarker>
             ))}
           </MapContainer>
