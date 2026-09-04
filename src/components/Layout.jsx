@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet } from 'react-router-dom'
 
 const LINKS = [
   { to: '/', label: 'Overview', end: true },
@@ -29,9 +29,9 @@ export default function Layout() {
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--ocean)" strokeWidth="1.6">
             <path d="M3 12h4l2-6 4 12 2-6h6" />
           </svg>
-          DeepScan
+          AquaScan
           <span style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--ink-faint)', fontWeight: 400, marginLeft: 2 }}>
-            Seabed Survey Platform
+            Seabed Debris Detection Platform
           </span>
         </div>
         <div style={{ display: 'flex', gap: 4, flex: 1 }}>
@@ -54,9 +54,9 @@ export default function Layout() {
             </NavLink>
           ))}
         </div>
-        <div className="mono" style={{ fontSize: 12, color: 'var(--ink-faint)', flex: 'none' }}>
-          Survey <strong style={{ color: 'var(--ink-dim)' }}>IN-2026-0714</strong>
-        </div>
+        <Link to="/upload" className="btn" style={{ flex: 'none', padding: '9px 18px', fontSize: 13, textDecoration: 'none' }}>
+          Upload
+        </Link>
       </nav>
       <main style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 32px 80px' }}>
         <Outlet />

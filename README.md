@@ -1,4 +1,4 @@
-# DeepScan — Marine Debris Detection Frontend
+# AquaScan — Marine Debris Detection Frontend
 
 A React + Vite frontend for the side-scan sonar debris detection system. Five screens: Overview
 (dashboard), Upload, Review, Map, Reports — all wired together with real state and routing, backed by

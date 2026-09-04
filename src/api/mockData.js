@@ -12,14 +12,13 @@
 // real lat/lon the moment an upload comes with real survey metadata via the
 // Upload page.
 //
-// The exception: detections on L-190/L-194/L-198/L-199 carry deliberately
-// fabricated demo coordinates (a few clusters over the Bay of Bengal off
-// the Chennai coast) so the Map page has something to plot — these are NOT
-// real navigation data, just placeholders for demoing the map's
-// hover-preview / click-to-review interaction.
-//
-// `site` is a generic "Debris sample library" label for the same reason —
-// these aren't tied to one of the fictional survey sites below.
+// The exception: detections (and their parent scan line) on
+// L-190/L-194/L-198/L-199 carry deliberately fabricated demo coordinates (a
+// few clusters over the Bay of Bengal off the Chennai coast) so the Map
+// page has something to plot — these are NOT real navigation data, just
+// placeholders for demoing the map's hover-preview / click-to-review
+// interaction. `site` names throughout are similarly illustrative survey
+// block labels, not tied to the fictional survey/vessel below.
 
 import { classLabel, classifyConfidence } from '../utils/taxonomy.js'
 
@@ -31,26 +30,26 @@ export const survey = {
 }
 
 export const scanLines = [
-  { id: "L-190", site: "Debris sample library", imageSrc: "/samples/sss-bridge-wreck-9.jpg", detections: 3, topClass: classLabel("non_mine_object"), status: "unreviewed" },
-  { id: "L-191", site: "Debris sample library", imageSrc: "/samples/shipwreck1.jpeg", detections: 1, topClass: classLabel("shipwreck"), status: "unreviewed" },
-  { id: "L-192", site: "Debris sample library", imageSrc: "/samples/shipwreck2.jpeg", detections: 1, topClass: classLabel("shipwreck"), status: "unreviewed" },
-  { id: "L-193", site: "Debris sample library", imageSrc: "/samples/sss-rod-boat7.jpg", detections: 1, topClass: classLabel("shipwreck"), status: "unreviewed" },
-  { id: "L-194", site: "Debris sample library", imageSrc: "/samples/sss-debris9-nice.jpg", detections: 3, topClass: classLabel("shipwreck"), status: "unreviewed" },
-  { id: "L-195", site: "Debris sample library", imageSrc: "/samples/sss3.jpg", detections: 1, topClass: classLabel("shipwreck"), status: "unreviewed" },
-  { id: "L-196", site: "Debris sample library", imageSrc: "/samples/sss-bicycle5.jpg", detections: 2, topClass: classLabel("shipwreck"), status: "unreviewed" },
-  { id: "L-197", site: "Debris sample library", imageSrc: "/samples/sss2.jpg", detections: 2, topClass: classLabel("shipwreck"), status: "unreviewed" },
-  { id: "L-198", site: "Debris sample library", imageSrc: "/samples/sss-mine11.jpg", detections: 5, topClass: classLabel("mine"), status: "unreviewed" },
-  { id: "L-199", site: "Debris sample library", imageSrc: "/samples/sss1.jpg", detections: 4, topClass: classLabel("non_mine_object"), status: "unreviewed" },
-  { id: "L-200", site: "Debris sample library", imageSrc: "/samples/sss-anchor6.jpg", detections: 0, topClass: null, status: "cleared" },
-  { id: "L-201", site: "Debris sample library", imageSrc: "/samples/sss-mine4.jpg", detections: 0, topClass: null, status: "cleared" },
-  { id: "L-202", site: "Debris sample library", imageSrc: "/samples/sss-tires8.jpg", detections: 0, topClass: null, status: "cleared" },
+  { id: "L-190", site: "Chennai Coastal Survey", imageSrc: "/samples/sss-bridge-wreck-9.jpg", detections: 3, topClass: classLabel("non_mine_object"), status: "unreviewed", location: { lat: 13.1512, lon: 80.3634 } },
+  { id: "L-191", site: "Gulf of Mannar, Block C", imageSrc: "/samples/shipwreck1.jpeg", detections: 1, topClass: classLabel("shipwreck"), status: "unreviewed", location: null },
+  { id: "L-192", site: "Palk Bay Transect", imageSrc: "/samples/shipwreck2.jpeg", detections: 1, topClass: classLabel("shipwreck"), status: "unreviewed", location: null },
+  { id: "L-193", site: "Kochi Harbor Channel", imageSrc: "/samples/sss-rod-boat7.jpg", detections: 1, topClass: classLabel("shipwreck"), status: "unreviewed", location: null },
+  { id: "L-194", site: "Chennai Offshore Block", imageSrc: "/samples/sss-debris9-nice.jpg", detections: 3, topClass: classLabel("shipwreck"), status: "unreviewed", location: { lat: 13.0206, lon: 80.4223 } },
+  { id: "L-195", site: "Lakshadweep Reef Survey", imageSrc: "/samples/sss3.jpg", detections: 1, topClass: classLabel("shipwreck"), status: "unreviewed", location: null },
+  { id: "L-196", site: "Netrani Island Approach", imageSrc: "/samples/sss-bicycle5.jpg", detections: 2, topClass: classLabel("shipwreck"), status: "unreviewed", location: null },
+  { id: "L-197", site: "Mangalore Port Approach", imageSrc: "/samples/sss2.jpg", detections: 2, topClass: classLabel("shipwreck"), status: "unreviewed", location: null },
+  { id: "L-198", site: "Chennai Approach Channel", imageSrc: "/samples/sss-mine11.jpg", detections: 5, topClass: classLabel("mine"), status: "unreviewed", location: { lat: 13.2688, lon: 80.3104 } },
+  { id: "L-199", site: "Chennai Outer Shelf", imageSrc: "/samples/sss1.jpg", detections: 4, topClass: classLabel("non_mine_object"), status: "unreviewed", location: { lat: 12.8912, lon: 80.3924 } },
+  { id: "L-200", site: "Visakhapatnam Offshore Block", imageSrc: "/samples/sss-anchor6.jpg", detections: 0, topClass: null, status: "cleared", location: null },
+  { id: "L-201", site: "Gulf of Kutch, Sector 2", imageSrc: "/samples/sss-mine4.jpg", detections: 0, topClass: null, status: "cleared", location: null },
+  { id: "L-202", site: "Tuticorin Harbor Channel", imageSrc: "/samples/sss-tires8.jpg", detections: 0, topClass: null, status: "cleared", location: null },
 ]
 
 export const detections = [
   {
     id: "det_7ee776722235",
     lineId: "L-190",
-    site: "Debris sample library",
+    site: "Chennai Coastal Survey",
     class: "non_mine_object",
     confidence: 0.6736,
     model: "mine_mine-model",
@@ -67,7 +66,7 @@ export const detections = [
   {
     id: "det_e038cf544578",
     lineId: "L-190",
-    site: "Debris sample library",
+    site: "Chennai Coastal Survey",
     class: "mine",
     confidence: 0.4215,
     model: "mine_mine-model",
@@ -84,7 +83,7 @@ export const detections = [
   {
     id: "det_99a79a97dea9",
     lineId: "L-190",
-    site: "Debris sample library",
+    site: "Chennai Coastal Survey",
     class: "mine",
     confidence: 0.3198,
     model: "shipwreck_ship-model",
@@ -101,7 +100,7 @@ export const detections = [
   {
     id: "det_40f9b36bee67",
     lineId: "L-191",
-    site: "Debris sample library",
+    site: "Gulf of Mannar, Block C",
     class: "shipwreck",
     confidence: 0.8183,
     model: "shipwreck_ship-model",
@@ -118,7 +117,7 @@ export const detections = [
   {
     id: "det_4c70e1b0938a",
     lineId: "L-192",
-    site: "Debris sample library",
+    site: "Palk Bay Transect",
     class: "shipwreck",
     confidence: 0.797,
     model: "shipwreck_ship-model",
@@ -135,7 +134,7 @@ export const detections = [
   {
     id: "det_87d93b29fecc",
     lineId: "L-193",
-    site: "Debris sample library",
+    site: "Kochi Harbor Channel",
     class: "shipwreck",
     confidence: 0.8158,
     model: "shipwreck_ship-model",
@@ -152,7 +151,7 @@ export const detections = [
   {
     id: "det_faaf976b208e",
     lineId: "L-194",
-    site: "Debris sample library",
+    site: "Chennai Offshore Block",
     class: "shipwreck",
     confidence: 0.8459,
     model: "shipwreck_ship-model",
@@ -169,7 +168,7 @@ export const detections = [
   {
     id: "det_4af092a24e94",
     lineId: "L-194",
-    site: "Debris sample library",
+    site: "Chennai Offshore Block",
     class: "mine",
     confidence: 0.4954,
     model: "mine_mine-model",
@@ -186,7 +185,7 @@ export const detections = [
   {
     id: "det_33cd800ef6fc",
     lineId: "L-194",
-    site: "Debris sample library",
+    site: "Chennai Offshore Block",
     class: "shipwreck",
     confidence: 0.301,
     model: "shipwreck_ship-model",
@@ -203,7 +202,7 @@ export const detections = [
   {
     id: "det_9d7cc381f633",
     lineId: "L-195",
-    site: "Debris sample library",
+    site: "Lakshadweep Reef Survey",
     class: "shipwreck",
     confidence: 0.8565,
     model: "shipwreck_ship-model",
@@ -220,7 +219,7 @@ export const detections = [
   {
     id: "det_29986f274597",
     lineId: "L-196",
-    site: "Debris sample library",
+    site: "Netrani Island Approach",
     class: "shipwreck",
     confidence: 0.635,
     model: "shipwreck_ship-model",
@@ -237,7 +236,7 @@ export const detections = [
   {
     id: "det_4bc171a86822",
     lineId: "L-196",
-    site: "Debris sample library",
+    site: "Netrani Island Approach",
     class: "shipwreck",
     confidence: 0.3241,
     model: "shipwreck_ship-model",
@@ -254,7 +253,7 @@ export const detections = [
   {
     id: "det_69ac168a7eab",
     lineId: "L-197",
-    site: "Debris sample library",
+    site: "Mangalore Port Approach",
     class: "shipwreck",
     confidence: 0.4891,
     model: "shipwreck_ship-model",
@@ -271,7 +270,7 @@ export const detections = [
   {
     id: "det_669b475bedb1",
     lineId: "L-197",
-    site: "Debris sample library",
+    site: "Mangalore Port Approach",
     class: "mine",
     confidence: 0.4295,
     model: "shipwreck_ship-model",
@@ -288,7 +287,7 @@ export const detections = [
   {
     id: "det_7ce46c46ebfe",
     lineId: "L-198",
-    site: "Debris sample library",
+    site: "Chennai Approach Channel",
     class: "mine",
     confidence: 0.4881,
     model: "mine_mine-model",
@@ -305,7 +304,7 @@ export const detections = [
   {
     id: "det_f569f70faf9f",
     lineId: "L-198",
-    site: "Debris sample library",
+    site: "Chennai Approach Channel",
     class: "mine",
     confidence: 0.4314,
     model: "mine_mine-model",
@@ -322,7 +321,7 @@ export const detections = [
   {
     id: "det_da88600eb7f4",
     lineId: "L-198",
-    site: "Debris sample library",
+    site: "Chennai Approach Channel",
     class: "mine",
     confidence: 0.3976,
     model: "mine_mine-model",
@@ -339,7 +338,7 @@ export const detections = [
   {
     id: "det_da667bc86f98",
     lineId: "L-198",
-    site: "Debris sample library",
+    site: "Chennai Approach Channel",
     class: "mine",
     confidence: 0.3431,
     model: "mine_mine-model",
@@ -356,7 +355,7 @@ export const detections = [
   {
     id: "det_f88314bcc09f",
     lineId: "L-198",
-    site: "Debris sample library",
+    site: "Chennai Approach Channel",
     class: "mine",
     confidence: 0.2754,
     model: "mine_mine-model",
@@ -373,7 +372,7 @@ export const detections = [
   {
     id: "det_dd24a37222ac",
     lineId: "L-199",
-    site: "Debris sample library",
+    site: "Chennai Outer Shelf",
     class: "non_mine_object",
     confidence: 0.7418,
     model: "mine_mine-model",
@@ -390,7 +389,7 @@ export const detections = [
   {
     id: "det_7d71dabcc8d8",
     lineId: "L-199",
-    site: "Debris sample library",
+    site: "Chennai Outer Shelf",
     class: "non_mine_object",
     confidence: 0.7195,
     model: "mine_mine-model",
@@ -407,7 +406,7 @@ export const detections = [
   {
     id: "det_3bc3ee58a5f7",
     lineId: "L-199",
-    site: "Debris sample library",
+    site: "Chennai Outer Shelf",
     class: "shipwreck",
     confidence: 0.4857,
     model: "shipwreck_ship-model",
@@ -424,7 +423,7 @@ export const detections = [
   {
     id: "det_78acbed53a40",
     lineId: "L-199",
-    site: "Debris sample library",
+    site: "Chennai Outer Shelf",
     class: "shipwreck",
     confidence: 0.3211,
     model: "shipwreck_ship-model",

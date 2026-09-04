@@ -38,10 +38,23 @@ export default function Dashboard() {
   }, {})
   const maxClassCount = Math.max(1, ...Object.values(classCounts))
 
+  // Presented to the room as a single unified detection model — the
+  // three-model ensemble underneath is an implementation detail, not
+  // something to put on a headline metric.
   const activeModelCount = MODEL_KEYS.filter((k) => health?.models?.[k]?.loaded).length
-  const engineValue = health ? `${activeModelCount}/${MODEL_KEYS.length}` : 'Active'
+  const engineValue = health
+    ? activeModelCount === MODEL_KEYS.length
+      ? 'Active'
+      : activeModelCount > 0
+        ? 'Partial'
+        : 'Offline'
+    : 'Active'
   const engineFoot = health
-    ? `${activeModelCount} of ${MODEL_KEYS.length} detection models active`
+    ? activeModelCount === MODEL_KEYS.length
+      ? 'Unified detection model running'
+      : activeModelCount > 0
+        ? 'Detection model partially available'
+        : 'Detection model offline'
     : healthError
       ? 'Backend unreachable'
       : 'running on survey-vessel hardware'
@@ -54,8 +67,8 @@ export default function Dashboard() {
         </div>
         <h1 style={{ fontSize: 30 }}>Seabed anomaly detection</h1>
         <p style={{ color: 'var(--ink-dim)', marginTop: 8, maxWidth: '62ch' }}>
-          {survey ? `${survey.vessel} · ${survey.area}` : 'Loading survey…'} — live status across every side-scan
-          sonar pass ingested this survey.
+          {survey ? `${survey.vessel} · ${survey.area} · Survey ${survey.id}` : 'Loading survey…'} — live status
+          across every side-scan sonar pass ingested this survey.
         </p>
       </div>
 
@@ -92,9 +105,39 @@ export default function Dashboard() {
                 {lines.map((l) => (
                   <tr key={l.id} className="row-hover">
                     <td className="primary mono">
-                      <Link to={`/review/${l.id}`} style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'inherit', textDecoration: 'none' }}>
-                        <div style={{ width: 44, height: 32, borderRadius: 6, overflow: 'hidden', background: '#04121a', flex: 'none' }}>
+                      <Link to={`/review/${l.id}`} style={{ display: 'flex', alignItems: 'center', gap: 14, color: 'inherit', textDecoration: 'none' }}>
+                        <div
+                          style={{
+                            position: 'relative',
+                            width: 140,
+                            height: 105,
+                            borderRadius: 8,
+                            overflow: 'hidden',
+                            background: '#04121a',
+                            flex: 'none',
+                            border: '1px solid var(--border-strong)',
+                            boxShadow: '0 3px 12px rgba(15,39,51,0.2)',
+                          }}
+                        >
                           <SonarCanvas imageSrc={l.imageSrc} seed={l.id} />
+                          {l.location && (
+                            <div
+                              className="mono"
+                              style={{
+                                position: 'absolute',
+                                left: 6,
+                                bottom: 5,
+                                fontSize: 9.5,
+                                letterSpacing: '.01em',
+                                color: '#e0f7f2',
+                                background: 'rgba(4,18,26,0.68)',
+                                padding: '2px 5px',
+                                borderRadius: 4,
+                              }}
+                            >
+                              {l.location.lat.toFixed(4)}°N, {l.location.lon.toFixed(4)}°E
+                            </div>
+                          )}
                         </div>
                         {l.id}
                       </Link>
