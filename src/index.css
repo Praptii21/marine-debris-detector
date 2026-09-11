@@ -1,5 +1,5 @@
 :root {
-  /* Oceanic blue palette */
+  /* Oceanic blue palette (light — default) */
   --bg: #eef4f7;
   --panel: #ffffff;
   --panel-alt: #e3edf3;
@@ -28,10 +28,45 @@
   --slate: #5b7688;
   --slate-tint: #e6edf1;
 
-  --radius: 12px;
-  --font-display: 'Source Serif 4', Georgia, serif;
+  /* Floating glass panel (map basemap switcher etc.) */
+  --glass: rgba(255, 255, 255, 0.95);
+
+  --radius: 8px;
+  --font-display: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
   --font-body: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+/* Tactical console palette — deep navy/slate with cyan + amber signal
+   colors. Toggled via the nav bar theme switch (see Layout.jsx), which
+   sets data-theme on <html> and persists the choice in localStorage. */
+:root[data-theme='dark'] {
+  --bg: #0a141c;
+  --panel: #0f1f2b;
+  --panel-alt: #142a39;
+  --border: #1f3a4d;
+  --border-strong: #2c5069;
+
+  --ink: #e6f1f5;
+  --ink-dim: #9db3bf;
+  --ink-faint: #62808f;
+
+  --ocean: #14a0bd;
+  --ocean-deep: #0a6f86;
+  --ocean-tint: rgba(20, 160, 189, 0.16);
+
+  --coral: #ff6b4a;
+  --coral-tint: rgba(255, 107, 74, 0.16);
+  --amber: #f2a93c;
+  --amber-tint: rgba(242, 169, 60, 0.16);
+  --sage: #4ddb95;
+  --sage-tint: rgba(77, 219, 149, 0.14);
+  --alert: #ff3f7e;
+  --alert-tint: rgba(255, 63, 126, 0.16);
+  --slate: #7e97a6;
+  --slate-tint: rgba(126, 151, 166, 0.16);
+
+  --glass: rgba(10, 20, 28, 0.9);
 }
 
 * {
@@ -190,14 +225,15 @@ textarea {
   left: 50%;
   transform: translateX(-50%);
   width: 240px;
-  background: var(--ink);
-  color: #fff;
+  background: var(--panel-alt);
+  border: 1px solid var(--border-strong);
+  color: var(--ink);
   font-size: 12px;
   font-weight: 400;
   line-height: 1.45;
   padding: 10px 12px;
   border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(15, 39, 51, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   z-index: 20;
 }
 .info-tip:hover .bubble,
@@ -234,20 +270,21 @@ textarea {
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13.5px;
+  font-size: 13px;
 }
 th {
   text-align: left;
-  font-size: 11px;
+  font-size: 10.5px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   color: var(--ink-faint);
   font-weight: 600;
-  padding: 11px 18px;
+  padding: 9px 16px;
   border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
 }
 td {
-  padding: 12px 18px;
+  padding: 9px 16px;
   border-bottom: 1px solid var(--border);
   color: var(--ink-dim);
 }

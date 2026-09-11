@@ -133,8 +133,8 @@ export default function MapView() {
               zIndex: 1000,
               display: 'flex',
               gap: 4,
-              background: 'rgba(255,255,255,.95)',
-              border: '1px solid var(--border)',
+              background: 'var(--glass)',
+              border: '1px solid var(--border-strong)',
               borderRadius: 10,
               padding: 4,
             }}
@@ -166,11 +166,12 @@ export default function MapView() {
               bottom: 12,
               left: 12,
               zIndex: 1000,
-              background: 'rgba(255,255,255,.92)',
-              border: '1px solid var(--border)',
+              background: 'var(--glass)',
+              border: '1px solid var(--border-strong)',
               borderRadius: 8,
               padding: '10px 14px',
               fontSize: 11.5,
+              color: 'var(--ink-dim)',
             }}
           >
             <LegendRow color={STATUS_COLOR['needs-review']} label="Needs review" />

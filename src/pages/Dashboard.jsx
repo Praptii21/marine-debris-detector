@@ -5,6 +5,7 @@ import SonarCanvas from '../components/SonarCanvas.jsx'
 import StatCard from '../components/StatCard.jsx'
 import StatusTag from '../components/StatusTag.jsx'
 import ConfidenceChart from '../components/ConfidenceChart.jsx'
+import TelemetryStrip from '../components/TelemetryStrip.jsx'
 import { classColor, classLabel } from '../utils/taxonomy.js'
 
 const MODEL_KEYS = ['crab_pot', 'shipwreck', 'mine']
@@ -61,7 +62,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div style={{ marginBottom: 28 }}>
+      <div style={{ marginBottom: 20 }}>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ocean)', fontWeight: 600, marginBottom: 8 }}>
           Mission overview
         </div>
@@ -72,7 +73,9 @@ export default function Dashboard() {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
+      <TelemetryStrip health={health} healthError={healthError} />
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 18 }}>
         <StatCard label="Lines processed" value={lines.length} foot="+12 in the last hour" />
         <StatCard label="Flagged anomalies" value={flagged} foot={`${unreviewed} awaiting review`} footTone="warn" />
         <StatCard label="Seafloor covered" value="61.4" unit="km²" foot={survey?.area || ''} />
@@ -84,9 +87,9 @@ export default function Dashboard() {
         />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 18, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 12, alignItems: 'start' }}>
         <div className="card">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
             <h3 style={{ fontSize: 16 }}>Recent scan lines</h3>
             <span style={{ fontSize: 12, color: 'var(--ink-faint)' }}>{lines.length} lines</span>
           </div>
@@ -155,9 +158,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div className="card">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
               <h3 style={{ fontSize: 16 }}>Review queue</h3>
               <span style={{ fontSize: 12, color: 'var(--ink-faint)' }}>{unreviewed} pending</span>
             </div>
@@ -195,7 +198,7 @@ export default function Dashboard() {
           {/* <ConfidenceChart detections={detections} /> */}
 
           <div className="card">
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
               <h3 style={{ fontSize: 16 }}>Class distribution</h3>
             </div>
             <div style={{ padding: '6px 0 14px' }}>
@@ -214,7 +217,7 @@ export default function Dashboard() {
           </div>
 
           {/* <div className="card">
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
               <h3 style={{ fontSize: 16 }}>Model status</h3>
             </div>
             <div style={{ padding: '6px 0 14px' }}>

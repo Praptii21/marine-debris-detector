@@ -21,6 +21,7 @@ import zipfile
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+import psutil
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -38,6 +39,10 @@ REJECTED_LOG = ANNOTATIONS_DIR / "rejected.jsonl"
 
 for d in (MODELS_DIR, IMAGES_DIR, LABELS_DIR):
     d.mkdir(parents=True, exist_ok=True)
+
+# Primes psutil's internal counter — cpu_percent() compares against the last
+# call, so an unprimed first call always reads 0.0.
+psutil.cpu_percent(interval=None)
 
 app = FastAPI(title="DeepScan Detection API")
 
@@ -382,4 +387,8 @@ def health():
         "models": models_status,
         "last_inference_ms": _last_inference_ms,
         "annotations": {"image_count": len(list(LABELS_DIR.glob("*.txt")))},
+        "system": {
+            "cpu_percent": psutil.cpu_percent(interval=None),
+            "memory_percent": psutil.virtual_memory().percent,
+        },
     }
