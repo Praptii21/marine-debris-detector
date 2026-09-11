@@ -164,6 +164,7 @@ export default function Dashboard() {
             <div>
               {detections
                 .filter((d) => d.status === 'needs-review')
+                .slice(0, 3)
                 .map((d) => (
                   <Link
                     key={d.id}
@@ -191,7 +192,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <ConfidenceChart detections={detections} />
+          {/* <ConfidenceChart detections={detections} /> */}
 
           <div className="card">
             <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
@@ -212,7 +213,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="card">
+          {/* <div className="card">
             <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
               <h3 style={{ fontSize: 16 }}>Model status</h3>
             </div>
@@ -236,7 +237,7 @@ export default function Dashboard() {
                 )
               })}
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

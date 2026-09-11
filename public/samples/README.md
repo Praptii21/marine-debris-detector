@@ -22,8 +22,6 @@ Current files, all referenced from `mockData.js`:
 | File | Scan line |
 |---|---|
 | `sss-bridge-wreck-9.jpg` | L-190 |
-| `shipwreck1.jpeg` | L-191 |
-| `shipwreck2.jpeg` | L-192 |
 | `sss-rod-boat7.jpg` | L-193 |
 | `sss-debris9-nice.jpg` | L-194 |
 | `sss3.jpg` | L-195 |
@@ -34,6 +32,10 @@ Current files, all referenced from `mockData.js`:
 | `sss-anchor6.jpg` | L-200 (no detections) |
 | `sss-mine4.jpg` | L-201 (no detections) |
 | `sss-tires8.jpg` | L-202 (no detections) |
+
+`shipwreck1.jpeg` and `shipwreck2.jpeg` are also here, deliberately not
+wired into `mockData.js` — kept as-is for manually testing the real Upload
+flow instead of showing up as pre-seeded demo lines.
 
 Drop any additional image here (`.png`/`.jpg`/`.jpeg`) and add a matching
 entry to `scanLines` in `mockData.js` to wire it up — or just run it through

@@ -127,6 +127,17 @@ export default function AnnotationTool({
     height: Math.abs(draft.y1 - draft.y0) * 100,
   }
 
+  const handleDownload = () => {
+    if (!imageSrc) return
+    const filename = imageSrc.startsWith('blob:') ? 'sonar-image.jpg' : imageSrc.split('/').pop()
+    const a = document.createElement('a')
+    a.href = imageSrc
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+  }
+
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
@@ -147,6 +158,9 @@ export default function AnnotationTool({
           Reject Detection
         </button>
         <div style={{ flex: 1 }} />
+        <button type="button" className="btn ghost" disabled={!imageSrc} onClick={handleDownload} title="Download source image">
+          Download image
+        </button>
         <button type="button" className="btn" disabled={saving} onClick={onSaveNext}>
           {saving ? 'Saving…' : `Save & Next${pendingCount ? ` (${pendingCount})` : ''} →`}
         </button>

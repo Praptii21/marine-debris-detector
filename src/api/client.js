@@ -86,17 +86,6 @@ function mapBackendDetection(raw, lineId, site) {
   }
 }
 
-// Extracts deterministic mock metadata from the backend based on the file contents.
-export async function extractSonarMetadata(file) {
-  const form = new FormData()
-  form.append('file', file)
-  const res = await fetch(`${BASE_URL}/extract-metadata`, { method: 'POST', body: form })
-  if (!res.ok) {
-    throw new Error(`Failed to extract metadata: ${res.status} ${res.statusText}`)
-  }
-  return res.json()
-}
-
 // Called from the Upload page. POSTs each file to the backend's /detect
 // endpoint (all three models run server-side, already NMS-merged), caches
 // the resulting detections and a blob URL for the image, and returns

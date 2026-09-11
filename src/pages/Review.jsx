@@ -232,7 +232,7 @@ export default function Review() {
                   <div style={{ width: `${d.confidence * 100}%`, height: '100%', background: d.confidence > 0.7 ? 'var(--ocean)' : 'var(--amber)' }} />
                 </div>
               )}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px', fontSize: 11.5, color: 'var(--ink-faint)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px 12px', fontSize: 11.5, color: 'var(--ink-faint)' }}>
                 <div>
                   Acoustic shadow
                   <div className="mono" style={{ color: 'var(--ink-dim)' }}>{d.acousticShadowM != null ? `${d.acousticShadowM} m` : '—'}</div>
@@ -240,10 +240,6 @@ export default function Review() {
                 <div>
                   Est. area
                   <div className="mono" style={{ color: 'var(--ink-dim)' }}>{d.areaM2 != null ? `${d.areaM2} m²` : '—'}</div>
-                </div>
-                <div>
-                  Slant range
-                  <div className="mono" style={{ color: 'var(--ink-dim)' }}>{d.slantRangeM != null ? `${d.slantRangeM} m` : '—'}</div>
                 </div>
                 <div>
                   Coordinates

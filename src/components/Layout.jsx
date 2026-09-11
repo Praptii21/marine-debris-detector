@@ -54,9 +54,9 @@ export default function Layout() {
             </NavLink>
           ))}
         </div>
-        <Link to="/upload" className="btn" style={{ flex: 'none', padding: '9px 18px', fontSize: 13, textDecoration: 'none' }}>
+        {/* <Link to="/upload" className="btn" style={{ flex: 'none', padding: '9px 18px', fontSize: 13, textDecoration: 'none' }}>
           Upload
-        </Link>
+        </Link> */}
       </nav>
       <main style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 32px 80px' }}>
         <Outlet />

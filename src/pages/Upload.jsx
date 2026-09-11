@@ -133,7 +133,7 @@ export default function Upload() {
         <h1 style={{ fontSize: 30 }}>Upload sonar imagery</h1>
         <p style={{ color: 'var(--ink-dim)', marginTop: 8, maxWidth: '68ch' }}>
           Accepts raw waterfall exports or georeferenced mosaics. Files are handed to the detection pipeline
-          as-is — preprocessing runs automatically on the backend, nothing to configure here.
+          as-is â€” preprocessing runs automatically on the backend, nothing to configure here.
         </p>
       </div>
 
@@ -172,13 +172,13 @@ export default function Upload() {
             </svg>
             <h3 style={{ fontSize: 18, marginBottom: 6 }}>Drop sonar files, or click to browse</h3>
             <p style={{ color: 'var(--ink-dim)', fontSize: 12.5, margin: '0 0 18px' }}>
-              Batch upload supported — files are processed in submission order
+              Batch upload supported â€” files are processed in submission order
             </p>
             <button type="button" className="btn" onClick={(e) => { e.stopPropagation(); inputRef.current?.click() }}>
               Select files
             </button>
             <div className="mono" style={{ marginTop: 16, color: 'var(--ink-faint)', fontSize: 11 }}>
-              .XTF &nbsp;.JSF &nbsp;.SEGY &nbsp;.TIF &nbsp;.PNG — up to 2 GB each
+              .XTF &nbsp;.JSF &nbsp;.SEGY &nbsp;.TIF &nbsp;.PNG â€” up to 2 GB each
             </div>
           </div>
 
@@ -274,11 +274,11 @@ export default function Upload() {
           )}
 
           <button type="submit" className="btn block" style={{ marginTop: 16, padding: 13 }} disabled={!canSubmit}>
-            {submitting ? 'Running detection pipeline...' : 'Run detection pipeline ?'}
+            {submitting ? 'Running detection pipelineâ€¦' : 'Run detection pipeline â†’'}
           </button>
           {result && (
             <div style={{ marginTop: 12, fontSize: 12.5, color: 'var(--sage)' }}>
-              Queued {result.queued} file{result.queued === 1 ? '' : 's'} as line {result.lineId} — opening review...
+              Queued {result.queued} file{result.queued === 1 ? '' : 's'} as line {result.lineId} Â· opening reviewâ€¦
             </div>
           )}
         </div>
