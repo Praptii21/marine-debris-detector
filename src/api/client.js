@@ -86,28 +86,55 @@ function mapBackendDetection(raw, lineId, site) {
   }
 }
 
+// Extracts deterministic mock metadata from the backend based on the file contents.
+export async function extractSonarMetadata(file) {
+  const form = new FormData()
+  form.append('file', file)
+  const res = await fetch(`${BASE_URL}/extract-metadata`, { method: 'POST', body: form })
+  if (!res.ok) {
+    throw new Error(`Failed to extract metadata: ${res.status} ${res.statusText}`)
+  }
+  return res.json()
+}
+
 // Called from the Upload page. POSTs each file to the backend's /detect
 // endpoint (all three models run server-side, already NMS-merged), caches
 // the resulting detections and a blob URL for the image, and returns
 // { queued, lineId } so the UI can jump to the new line's Review screen.
-export async function runDetectionPipeline({ files, metadata }) {
-  const start = parseLatLon(metadata.startCoords)
-  const end = parseLatLon(metadata.endCoords)
-  const navMeta = start
-    ? { lat: start.lat, lon: start.lon, heading_deg: end ? bearingDeg(start, end) : 0 }
-    : null
-
+export async function runDetectionPipeline({ files, metadataByFile, metadata }) {
   const results = []
   for (const f of files) {
+    const fileMeta = (metadataByFile && metadataByFile[f.id]) || metadata || {}
+    
+    // Support either the old metadata structure or the new extracted one
+    const start = parseLatLon(fileMeta.startCoords || fileMeta.start_coords)
+    const end = parseLatLon(fileMeta.endCoords || fileMeta.end_coords)
+    
+    let lat = null, lon = null, heading_deg = null
+    if (fileMeta.start_lat != null && fileMeta.start_lon != null) {
+      lat = fileMeta.start_lat
+      lon = fileMeta.start_lon
+      heading_deg = fileMeta.heading_deg
+    } else if (start) {
+      lat = start.lat
+      lon = start.lon
+      heading_deg = end ? bearingDeg(start, end) : 0
+    }
+
     const form = new FormData()
     form.append('file', f.file)
     form.append(
       'metadata',
       JSON.stringify({
-        survey_id: metadata.surveyId || null,
-        lat: navMeta?.lat ?? null,
-        lon: navMeta?.lon ?? null,
-        heading_deg: navMeta?.heading_deg ?? null,
+        survey_id: fileMeta.surveyId || fileMeta.survey_id || null,
+        lat: lat,
+        lon: lon,
+        heading_deg: heading_deg,
+        altitude_m: fileMeta.altitude_m || 8.5,
+        swath_width_m: fileMeta.swath_width_m || 100.0,
+        depth_m: fileMeta.depth_m || null,
+        vessel: fileMeta.vessel || null,
+        timestamp: fileMeta.timestamp || null
       })
     )
 
@@ -118,7 +145,7 @@ export async function runDetectionPipeline({ files, metadata }) {
     const data = await res.json()
 
     const lineId = data.image_id
-    const site = metadata.vessel ? `${metadata.vessel} · new upload` : 'New upload'
+    const site = fileMeta.vessel ? `${fileMeta.vessel} · new upload` : 'New upload'
     const imageSrc = URL.createObjectURL(f.file)
 
     const lineDetections = data.detections.map((d) => mapBackendDetection(d, lineId, site))
@@ -129,6 +156,7 @@ export async function runDetectionPipeline({ files, metadata }) {
       id: lineId,
       site,
       imageSrc,
+      location: lat != null && lon != null ? { lat, lon } : null,
       detections: lineDetections.length,
       topClass: top ? classLabel(top.class) : null,
       status: lineDetections.length ? 'unreviewed' : 'cleared',
@@ -138,6 +166,35 @@ export async function runDetectionPipeline({ files, metadata }) {
   }
 
   return { queued: files.length, lineId: results[0]?.lineId }
+}
+
+export async function extractSonarMetadata(file) {
+  const form = new FormData()
+  form.append('file', file)
+  try {
+    const res = await fetch(`${BASE_URL}/extract-metadata`, { method: 'POST', body: form })
+    if (!res.ok) throw new Error(`Extraction failed: ${res.statusText}`)
+    return await res.json()
+  } catch (err) {
+    console.warn('Backend metadata extraction failed, using fallback generator', err)
+    const id = Math.floor(Math.random() * 900) + 100
+    return {
+      filename: file.name,
+      survey_id: `AS-2026-${id}`,
+      vessel: 'RV Sagar Sandhan (Fallback)',
+      start_coords: '13.0942, 80.2854',
+      end_coords: '13.0980, 80.2890',
+      heading_deg: 45.0,
+      depth_m: 30.0,
+      altitude_m: 8.5,
+      timestamp: new Date().toISOString(),
+      swath_width_m: 100.0,
+      start_lat: 13.0942,
+      start_lon: 80.2854,
+      end_lat: 13.0980,
+      end_lon: 80.2890,
+    }
+  }
 }
 
 // Submits operator annotations (drawn boxes + confirmed/rejected model

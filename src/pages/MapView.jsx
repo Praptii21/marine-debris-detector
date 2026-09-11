@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet'
+import { MapContainer, TileLayer, CircleMarker, Tooltip, useMap } from 'react-leaflet'
 import { useNavigate } from 'react-router-dom'
 import { getDetections, getScanLines, getSites } from '../api/client.js'
 import SonarCanvas from '../components/SonarCanvas.jsx'
@@ -20,7 +20,7 @@ const BASEMAPS = {
     layers: [
       {
         url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        attribution: 'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics',
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics',
       },
     ],
   },
@@ -44,6 +44,17 @@ const STATUS_COLOR = {
   'auto-confirmed': '#3f8a63',
   'operator-confirmed': '#1f6fa3',
   rejected: '#82969e',
+}
+
+function MapBoundsUpdater({ detections }) {
+  const map = useMap();
+  useEffect(() => {
+    const coords = detections.filter(d => d.location).map(d => [d.location.lat, d.location.lon]);
+    if (coords.length > 0) {
+      map.fitBounds(coords, { padding: [50, 50], maxZoom: 14 });
+    }
+  }, [detections, map]);
+  return null;
 }
 
 export default function MapView() {
@@ -76,6 +87,7 @@ export default function MapView() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 18 }}>
         <div style={{ position: 'relative', height: 560, borderRadius: 'var(--radius)', overflow: 'hidden', border: '1px solid var(--border-strong)' }}>
           <MapContainer center={[12.5, 76]} zoom={6} style={{ width: '100%', height: '100%' }}>
+            <MapBoundsUpdater detections={detections} />
             {BASEMAPS[basemap].layers.map((layer, i) => (
               <TileLayer key={`${basemap}-${i}`} url={layer.url} attribution={layer.attribution} />
             ))}
