@@ -8,24 +8,39 @@ const STEPS = [
   {
     body: (
       <>
-        <span className="font-mono">640,000+</span> tonnes of fishing gear are abandoned in the ocean every year.
+        <span className="font-mono text-cyan-glow">640,000+</span> tonnes of ghost fishing gear are abandoned in our oceans every year.
       </>
     ),
-    source: 'FAO / UNEP',
-  },
-  { body: 'Ghost nets keep killing for decades after they’re lost.' },
-  {
-    body: 'Side-scan sonar can see them — but a human has to look at every frame.',
-    image: { src: SONAR_IMG, alt: 'Side-scan sonar return of a submerged net', caption: 'A ghost net’s acoustic shadow, either side of nadir.' },
+    source: 'FAO / UNEP Marine Report',
   },
   {
-    body: 'A single survey line produces hours of imagery. Most of it is seafloor.',
-    image: { src: SONAR_IMG, alt: 'Side-scan sonar return of a submerged net', caption: 'One contact, hours of empty seabed around it.' },
+    body: 'Ghost nets and derelict pots keep trapping and killing marine life for decades after loss.',
+    image: {
+      src: '/samples/sss-debris9-nice.jpg',
+      alt: 'Submerged derelict net cluster on seafloor',
+      caption: 'Real SSS contact: acoustic shadow trailing across bathymetric seafloor ridges.',
+    },
+  },
+  {
+    body: 'Side-scan sonar can resolve them through turbid waters — but humans must inspect every ping.',
+    image: {
+      src: '/landing/sonar-net-detection.png',
+      alt: 'Side-scan sonar return of a submerged net',
+      caption: 'A ghost net acoustic shadow corridor either side of nadir.',
+    },
+  },
+  {
+    body: 'A single autonomous survey generates gigabytes of raw waterfall data. 98% is empty seabed.',
+    image: {
+      src: '/samples/sss-crabpot1.jpg',
+      alt: 'Lost crab pot array on seabed',
+      caption: 'Isolated target contact amidst square kilometers of monotonous seabed.',
+    },
   },
   {
     body: (
       <>
-        <span className="text-fg-dim">The bottleneck isn’t the sonar.</span> It’s the review.
+        <span className="text-fg-dim">The bottleneck isn’t the acoustic sensor.</span> It’s the human review.
       </>
     ),
     closer: true,
@@ -108,19 +123,21 @@ export default function Problem() {
   }
 
   return (
-    <section id="problem" className="relative overflow-hidden border-b border-line py-24 lg:py-28">
-      {/* Ghost-gear photography, kept faint so it reads as texture, not imagery competing with the text. */}
+    <section id="problem" className="relative overflow-hidden border-b border-line bg-abyss py-24 lg:py-28">
+      {/* Ghost-gear & Marine Life photography - deep, atmospheric, and clearly visible */}
       <img
         src="/landing/problem-bg-1.jpg"
-        alt=""
+        alt="Marine life and ghost net crisis"
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 size-full object-cover opacity-[0.1] grayscale"
+        className="pointer-events-none absolute inset-0 size-full object-cover opacity-45 mix-blend-luminosity filter brightness-90 contrast-125"
       />
-      <div className="pointer-events-none absolute inset-0 bg-abyss/70" aria-hidden="true" />
+      {/* Deep ocean gradient vignette ensuring text readability */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-abyss via-abyss/70 to-abyss/95" aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-0 bg-radial-gradient from-transparent via-abyss/40 to-abyss" aria-hidden="true" />
 
       <Container className="relative">
         <Reveal>
-          <Eyebrow index="01">The problem</Eyebrow>
+          <Eyebrow index="01">The Global Ocean Crisis</Eyebrow>
         </Reveal>
 
         <Reveal

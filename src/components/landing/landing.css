@@ -9,41 +9,94 @@
 @source "../../pages/Landing.jsx";
 
 @theme {
-  --color-abyss: #0b1118;
-  --color-deep: #111a22;
-  --color-surface: #161f28;
-  --color-line: #22303d;
-  --color-line-strong: #2e3e4d;
-  --color-fg: #e6edf3;
-  --color-fg-dim: #9ba9b6;
-  --color-fg-faint: #6f7e8b;
-  /* UI accent. Base is a shade darker than #4C6EF5 so white button text
-     clears 4.5:1; the lighter tone is for accent text on dark. */
-  --color-signal: #3f5fe0;
-  --color-signal-hover: #4c6ef5;
-  --color-signal-text: #8199f8;
-  /* Sonar data only — detections, waterfall imagery. Never UI chrome. */
+  --color-abyss: var(--color-abyss, #f0f5fa);
+  --color-abyss-dark: var(--color-abyss-dark, #e4edf6);
+  --color-deep: var(--color-deep, #ffffff);
+  --color-surface: var(--color-surface, #f7fafc);
+  --color-surface-hover: var(--color-surface-hover, #ebf3fb);
+  --color-line: var(--color-line, #d3e2f0);
+  --color-line-strong: var(--color-line-strong, #bad2e8);
+  --color-fg: var(--color-fg, #0a192f);
+  --color-fg-dim: var(--color-fg-dim, #334e68);
+  --color-fg-faint: var(--color-fg-faint, #627d98);
+  
+  /* UI accent */
+  --color-signal: var(--color-signal, #0284c7);
+  --color-signal-hover: var(--color-signal-hover, #0369a1);
+  --color-signal-text: var(--color-signal-text, #0284c7);
+  --color-cyan-glow: var(--color-cyan-glow, #0284c7);
+  --color-teal-glow: var(--color-teal-glow, #0d9488);
+  
+  /* Sonar data */
   --color-sonar: #d98b2b;
+  --color-sonar-bright: #fbbf24;
+  --color-risk-crit: #ef4444;
+  --color-risk-high: #f97316;
+  --color-risk-mod: #eab308;
+  --color-risk-low: #0284c7;
 
   --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 }
 
-/* index.css styles bare h1–h3, a, th and td through the dashboard's tokens.
-   Remapping those tokens inside the landing subtree makes any rule that still
-   leaks through resolve to the landing palette instead of the light theme. */
+/* Light Ocean Theme (Blue-Whiteish) - DEFAULT */
 .landing {
+  --color-abyss: #f0f5fa;
+  --color-abyss-dark: #e4edf6;
+  --color-deep: #ffffff;
+  --color-surface: #f6fafd;
+  --color-surface-hover: #e8f2fc;
+  --color-line: #d2e3f2;
+  --color-line-strong: #b5d2eb;
+  --color-fg: #0a192f;
+  --color-fg-dim: #2d455e;
+  --color-fg-faint: #5a7794;
+  --color-signal: #0284c7;
+  --color-signal-hover: #0369a1;
+  --color-signal-text: #0284c7;
+  --color-cyan-glow: #0284c7;
+  --color-teal-glow: #0d9488;
+
   --ink: var(--color-fg);
   --ink-dim: var(--color-fg-dim);
   --ink-faint: var(--color-fg-faint);
   --border: var(--color-line);
   --ocean-deep: var(--color-signal-text);
   --font-display: var(--font-sans);
+  background-color: var(--color-abyss);
+  color: var(--color-fg);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Minimal scoped reset standing in for preflight. :where() keeps these at
-   element-level specificity so any utility class overrides them; this file
-   loads after index.css, so they also win ties against its bare selectors. */
+/* Dark Abyss Theme */
+.landing.theme-dark {
+  --color-abyss: #070d14;
+  --color-abyss-dark: #04080e;
+  --color-deep: #0e1722;
+  --color-surface: #14202e;
+  --color-surface-hover: #1b2b3d;
+  --color-line: #1e2e3e;
+  --color-line-strong: #2a3f55;
+  --color-fg: #e6edf3;
+  --color-fg-dim: #9ba9b6;
+  --color-fg-faint: #627588;
+  --color-signal: #2563eb;
+  --color-signal-hover: #3b82f6;
+  --color-signal-text: #60a5fa;
+  --color-cyan-glow: #06b6d4;
+  --color-teal-glow: #14b8a6;
+
+  --ink: var(--color-fg);
+  --ink-dim: var(--color-fg-dim);
+  --ink-faint: var(--color-fg-faint);
+  --border: var(--color-line);
+  --ocean-deep: var(--color-signal-text);
+  --font-display: var(--font-sans);
+  background-color: var(--color-abyss);
+  color: var(--color-fg);
+}
+
+/* Minimal scoped reset standing in for preflight */
 :where(.landing) :is(th, td) {
   padding: 0;
   border-bottom: 0;
@@ -76,3 +129,96 @@
 :where(.landing) table {
   border-collapse: collapse;
 }
+
+/* Authentic Bathymetric Depth & Sonar Grid Backgrounds */
+.landing .bg-ocean-depth {
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(2, 132, 199, 0.08), transparent 70%),
+    radial-gradient(circle 600px at 85% 30%, rgba(14, 165, 233, 0.06), transparent 60%),
+    radial-gradient(circle 500px at 15% 70%, rgba(20, 184, 166, 0.05), transparent 60%);
+}
+.landing.theme-dark .bg-ocean-depth {
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(14, 116, 144, 0.18), transparent 70%),
+    radial-gradient(circle 600px at 85% 30%, rgba(37, 99, 235, 0.08), transparent 60%),
+    radial-gradient(circle 500px at 15% 70%, rgba(13, 148, 136, 0.07), transparent 60%);
+}
+
+.landing .bg-bathymetry-grid {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(181, 210, 235, 0.4) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(181, 210, 235, 0.4) 1px, transparent 1px);
+}
+.landing.theme-dark .bg-bathymetry-grid {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(42, 63, 85, 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(42, 63, 85, 0.15) 1px, transparent 1px);
+}
+
+.bg-sonar-rings {
+  background-image: radial-gradient(circle, transparent 30%, rgba(30, 46, 62, 0.3) 31%, transparent 32%, transparent 60%, rgba(30, 46, 62, 0.25) 61%, transparent 62%, transparent 90%, rgba(30, 46, 62, 0.2) 91%, transparent 92%);
+}
+
+/* Animated Dotted Journey Line */
+@keyframes flowDashes {
+  from {
+    stroke-dashoffset: 40;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-flow-dashes {
+  animation: flowDashes 1.8s linear infinite;
+}
+
+/* Radar pulse animation */
+@keyframes radarSweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-radar-sweep {
+  animation: radarSweep 6s linear infinite;
+}
+
+@keyframes sonarPing {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+.animate-sonar-ping {
+  animation: sonarPing 2.5s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+/* Subtle float animation for telemetry cards */
+@keyframes oceanFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-ocean-float {
+  animation: oceanFloat 4s ease-in-out infinite;
+}
+
