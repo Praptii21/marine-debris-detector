@@ -229,6 +229,9 @@ export default function Upload() {
             <div className="card">
               <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
                 <h3 style={{ fontSize: 16 }}>Survey metadata</h3>
+                <p style={{ marginTop: 4, fontSize: 11.5, color: 'var(--ink-faint)' }}>
+                  Auto-filled from sonar file headers (XTF/JSF). Manual entry for image-only uploads.
+                </p>
               </div>
               <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div className="field">

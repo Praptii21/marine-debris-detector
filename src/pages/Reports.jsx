@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getSurvey, getDetections, getScanLines, getHealth, exportAnnotations } from '../api/client.js'
+import { getSurvey, getDetections, getScanLines } from '../api/client.js'
 import { downloadReportCsv, downloadReportJson } from '../utils/exportReport.js'
 import ConfidenceBadge from '../components/ConfidenceBadge.jsx'
 import { classLabel, isCriticalClass, modelLabel, statusRowTint } from '../utils/taxonomy.js'
@@ -11,8 +11,7 @@ export default function Reports() {
   const [scanLines, setScanLines] = useState([])
   const [search, setSearch] = useState('')
   const [classFilter, setClassFilter] = useState('all')
-  const [health, setHealth] = useState(null)
-  const [exporting, setExporting] = useState(false)
+  const [minConfidence, setMinConfidence] = useState(0)
   const [generatingPdf, setGeneratingPdf] = useState(false)
   const [exportError, setExportError] = useState(null)
   const [selected, setSelected] = useState(() => new Set())
@@ -21,13 +20,13 @@ export default function Reports() {
     getSurvey().then(setSurvey)
     getDetections().then(setDetections)
     getScanLines().then(setScanLines)
-    getHealth().then(setHealth).catch(() => {})
   }, [])
 
   const classes = useMemo(() => ['all', ...new Set(detections.map((d) => d.class))], [detections])
 
   const filtered = detections.filter((d) => {
     if (classFilter !== 'all' && d.class !== classFilter) return false
+    if (d.confidence != null && d.confidence < minConfidence) return false
     if (!search.trim()) return true
     const q = search.toLowerCase()
     return (
@@ -62,18 +61,6 @@ export default function Reports() {
     })
   }
 
-  const handleExportTraining = async () => {
-    setExporting(true)
-    setExportError(null)
-    try {
-      await exportAnnotations()
-    } catch (err) {
-      setExportError(err.message || 'Export failed.')
-    } finally {
-      setExporting(false)
-    }
-  }
-
   const handleDirectPdfExport = async () => {
     setGeneratingPdf(true)
     setExportError(null)
@@ -86,8 +73,6 @@ export default function Reports() {
       setGeneratingPdf(false)
     }
   }
-
-  const annotatedCount = health?.annotations?.image_count
 
   return (
     <div>
@@ -121,6 +106,21 @@ export default function Reports() {
             </option>
           ))}
         </select>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: 'var(--ink-dim)' }}>
+          Min confidence
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.05}
+            value={minConfidence}
+            onChange={(e) => setMinConfidence(Number(e.target.value))}
+            style={{ width: 120 }}
+          />
+          <span className="mono" style={{ width: 34, color: 'var(--ink)', fontWeight: 600 }}>
+            {Math.round(minConfidence * 100)}%
+          </span>
+        </label>
         {selected.size > 0 && (
           <span style={{ fontSize: 13, color: 'var(--ocean)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
             <span>{selected.size} selected for export</span>
@@ -154,11 +154,6 @@ export default function Reports() {
           }}
         >
           {generatingPdf ? 'Generating PDF…' : `🌊 Export PDF${selected.size > 0 ? ` (${selected.size})` : ''}`}
-        </button>
-        <button type="button" className="btn ghost" onClick={handleExportTraining} disabled={exporting}>
-          {exporting
-            ? 'Exporting…'
-            : `Export Training Data${annotatedCount != null ? ` (${annotatedCount} annotated image${annotatedCount === 1 ? '' : 's'})` : ''}`}
         </button>
       </div>
       {exportError && <div style={{ marginBottom: 12, fontSize: 12.5, color: 'var(--coral)' }}>{exportError}</div>}
