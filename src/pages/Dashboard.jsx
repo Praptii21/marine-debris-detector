@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getSurvey, getScanLines, getDetections, getHealth } from '../api/client.js'
+import { getSurvey, getScanLines, getDetections, getHealth, setLineArchived } from '../api/client.js'
 import SonarCanvas from '../components/SonarCanvas.jsx'
 import StatCard from '../components/StatCard.jsx'
 import StatusTag from '../components/StatusTag.jsx'
@@ -21,19 +21,37 @@ export default function Dashboard() {
   const [detections, setDetections] = useState([])
   const [health, setHealth] = useState(null)
   const [healthError, setHealthError] = useState(false)
+  const [lastSync, setLastSync] = useState(null)
+  const [lineFilter, setLineFilter] = useState('active') // 'active' | 'archived'
+
+  const refreshLines = () => getScanLines().then(setLines)
 
   useEffect(() => {
     getSurvey().then(setSurvey)
-    getScanLines().then(setLines)
+    refreshLines()
     getDetections().then(setDetections)
     getHealth()
-      .then(setHealth)
+      .then((h) => {
+        setHealth(h)
+        setLastSync(new Date())
+      })
       .catch(() => setHealthError(true))
   }, [])
 
-  const flagged = detections.length
-  const unreviewed = detections.filter((d) => d.status === 'needs-review').length
-  const classCounts = detections.reduce((acc, d) => {
+  const handleArchiveToggle = async (line) => {
+    await setLineArchived(line.id, !line.archived)
+    refreshLines()
+  }
+
+  const activeLineIds = new Set(lines.filter((l) => !l.archived).map((l) => l.id))
+  const visibleLines = lines.filter((l) => (lineFilter === 'archived' ? l.archived : !l.archived))
+
+  // Archived lines stop counting toward the headline flag total — otherwise
+  // it only ever grows, even after everything on it has been reviewed.
+  const activeDetections = detections.filter((d) => activeLineIds.has(d.lineId))
+  const flagged = activeDetections.length
+  const unreviewed = activeDetections.filter((d) => d.status === 'needs-review').length
+  const classCounts = activeDetections.reduce((acc, d) => {
     acc[d.class] = (acc[d.class] || 0) + 1
     return acc
   }, {})
@@ -73,7 +91,7 @@ export default function Dashboard() {
         </p>
       </div>
 
-      <TelemetryStrip health={health} healthError={healthError} />
+      <TelemetryStrip health={health} healthError={healthError} lastSync={lastSync} />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 18 }}>
         <StatCard label="Lines processed" value={lines.length} foot="+12 in the last hour" />
@@ -91,7 +109,31 @@ export default function Dashboard() {
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
             <h3 style={{ fontSize: 16 }}>Recent scan lines</h3>
-            <span style={{ fontSize: 12, color: 'var(--ink-faint)' }}>{lines.length} lines</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ display: 'flex', gap: 4, background: 'var(--panel-alt)', border: '1px solid var(--border-strong)', borderRadius: 8, padding: 3 }}>
+                {['active', 'archived'].map((f) => (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => setLineFilter(f)}
+                    style={{
+                      border: 'none',
+                      borderRadius: 5,
+                      padding: '4px 10px',
+                      fontSize: 11.5,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      textTransform: 'capitalize',
+                      background: lineFilter === f ? 'var(--ocean-deep)' : 'transparent',
+                      color: lineFilter === f ? '#fff' : 'var(--ink-dim)',
+                    }}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+              <span style={{ fontSize: 12, color: 'var(--ink-faint)' }}>{visibleLines.length} lines</span>
+            </div>
           </div>
           <div className="table-wrap">
             <table>
@@ -102,10 +144,11 @@ export default function Dashboard() {
                   <th>Detections</th>
                   <th>Top class</th>
                   <th>Status</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
-                {lines.map((l) => (
+                {visibleLines.map((l) => (
                   <tr key={l.id} className="row-hover">
                     <td className="primary mono">
                       <Link to={`/review/${l.id}`} style={{ display: 'flex', alignItems: 'center', gap: 14, color: 'inherit', textDecoration: 'none' }}>
@@ -151,8 +194,25 @@ export default function Dashboard() {
                     <td>
                       <StatusTag status={l.status} />
                     </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <button
+                        type="button"
+                        className="btn ghost"
+                        style={{ padding: '4px 10px', fontSize: 11.5 }}
+                        onClick={() => handleArchiveToggle(l)}
+                      >
+                        {l.archived ? 'Unarchive' : 'Archive'}
+                      </button>
+                    </td>
                   </tr>
                 ))}
+                {visibleLines.length === 0 && (
+                  <tr>
+                    <td colSpan={6} style={{ color: 'var(--ink-faint)', textAlign: 'center', padding: 24 }}>
+                      No {lineFilter} lines.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

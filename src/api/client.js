@@ -45,6 +45,14 @@ export async function updateDetectionStatus(detectionId, status) {
   return _detections.find((d) => d.id === detectionId)
 }
 
+// Archiving is session-side only (same in-memory store as everything else
+// here) — it exists so a fully-reviewed line stops counting toward
+// "flagged anomalies" without deleting its detections or history.
+export async function setLineArchived(lineId, archived) {
+  _scanLines = _scanLines.map((l) => (l.id === lineId ? { ...l, archived } : l))
+  return _scanLines.find((l) => l.id === lineId)
+}
+
 function parseLatLon(str) {
   if (!str) return null
   const parts = str.split(',').map((s) => parseFloat(s.trim()))
