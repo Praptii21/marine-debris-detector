@@ -13,6 +13,7 @@ Run:
     cd backend && uvicorn main:app --reload --port 8000
 """
 
+import gc
 import io
 import json
 import time
@@ -22,6 +23,12 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import psutil
+import torch
+
+# Prevent PyTorch from spawning thread pools and allocating autograd buffers in memory-constrained cloud environments
+torch.set_num_threads(1)
+torch.set_grad_enabled(False)
+
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -161,14 +168,22 @@ def load_models():
             # so /health can still report it as "Unavailable".
             MODELS.append(LoadedModel(spec["key"], spec["label"], None))
             continue
+        # In cloud containers with 512MB RAM, avoid loading duplicate size variants;
+        # prefer the lightweight 's' variant over 'm'.
+        if len(paths) > 1 and any("yolo26s" in p.name.lower() for p in paths):
+            paths = [p for p in paths if "yolo26m" not in p.name.lower()]
+
         for path in paths:
             loaded = LoadedModel(spec["key"], spec["label"], path)
             try:
                 loaded.load()
+                gc.collect()
             except Exception as exc:  # startup diagnostics only
                 print(f"[startup] failed to load {spec['key']} from {path}: {exc}")
                 loaded.model = None
             MODELS.append(loaded)
+    gc.collect()
+
 
 
 # -- Detection ------------------------------------------------------------------

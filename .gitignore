@@ -10,7 +10,8 @@ backend/**/__pycache__/
 backend/.venv/
 backend/venv/
 # Model weights are tracked for cloud deployment (all files < 50MB)
-# backend/models/**/*.pt
+# Exclude the heavy medium variant (yolo26m) to prevent OOM on 512MB RAM cloud tiers
+backend/models/**/yolo26m.pt
 backend/annotations/images/*
 !backend/annotations/images/.gitkeep
 backend/annotations/labels/*
