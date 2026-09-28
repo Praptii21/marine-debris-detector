@@ -39,8 +39,8 @@ const STAGES = [
     detail: 'Pixel positions are transformed to slant-range, corrected for towfish altitude, and projected into WGS84/UTM coordinates with depth-aware risk zones.',
     spec: ['PyProj', 'WGS84 → UTM 44N', 'Slant-to-Ground'],
     image: '/landing/map.jpg',
-    metric: '±0.4m Geo Precision',
-    outcome: 'Geolocated risk points plotted on maritime bathymetric chart.',
+    metric: 'WGS84 → UTM 44N',
+    outcome: 'Geolocated risk points plotted on the geospatial risk map.',
   },
   {
     num: '05',

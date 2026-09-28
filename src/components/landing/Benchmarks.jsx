@@ -19,7 +19,7 @@ const RUNTIME = [
 ]
 
 const th = 'py-3 pr-6 text-left font-mono text-[11px] font-normal uppercase tracking-[0.1em] text-fg-faint'
-const td = 'py-3 pr-6 font-mono text-sm tabular-nums'
+const td = 'py-3.5 pr-6 font-mono text-base font-bold tabular-nums'
 
 function BlockTitle({ tag, children }) {
   return (
@@ -47,7 +47,7 @@ export default function Benchmarks() {
           </p>
         </Reveal>
 
-        <Reveal className="mt-14 border border-line">
+        <Reveal className="mt-14 border border-line-strong bg-surface shadow-sm">
           {/* Block A */}
           <div className="grid lg:grid-cols-12">
             <div className="min-w-0 p-6 sm:p-8 lg:col-span-8">
@@ -66,9 +66,9 @@ export default function Benchmarks() {
                     {PREPROCESSING.map((row) => (
                       <tr
                         key={row.config}
-                        className={`border-b border-line last:border-b-0 ${row.best ? 'bg-surface text-fg' : 'text-fg-dim'}`}
+                        className={`border-b border-line last:border-b-0 ${row.best ? 'bg-signal/10 text-fg' : 'text-fg-dim'}`}
                       >
-                        <td className={`py-3 pr-6 text-sm ${row.best ? 'border-l-2 border-signal pl-3' : 'pl-3.5'}`}>{row.config}</td>
+                        <td className={`py-3.5 pr-6 text-sm ${row.best ? 'border-l-2 border-signal pl-3 font-semibold' : 'pl-3.5'}`}>{row.config}</td>
                         <td className={td}>{row.p}</td>
                         <td className={td}>{row.r}</td>
                         <td className={td}>{row.map}</td>
@@ -105,7 +105,7 @@ export default function Benchmarks() {
                   </thead>
                   <tbody>
                     {MODEL_SIZE.map((row) => (
-                      <tr key={row.model} className={`border-b border-line last:border-b-0 ${row.deployed ? 'text-fg' : 'text-fg-dim'}`}>
+                      <tr key={row.model} className={`border-b border-line last:border-b-0 ${row.deployed ? 'bg-signal/10 text-fg' : 'text-fg-dim'}`}>
                         <td className={td}>
                           {row.model}
                           {row.deployed && (

@@ -27,10 +27,6 @@ export default function Footer() {
         </div>
 
         <div className="flex flex-col sm:items-end gap-3 font-mono text-xs">
-          <div className="flex items-center gap-2 text-emerald-400">
-            <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Autonomous Pipeline Ready</span>
-          </div>
           <Link
             to="/dashboard"
             className="flex items-center gap-1.5 rounded border border-cyan-glow/40 bg-signal/15 px-4 py-2 text-cyan-glow no-underline hover:bg-signal/25 transition-all"
