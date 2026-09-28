@@ -1,0 +1,11 @@
+# Railway/Nixpacks build config.
+#
+# ultralytics pulls in full opencv-python (GUI variant) as a transitive
+# dependency even though requirements.txt pins opencv-python-headless —
+# the two conflict at install time and leave a cv2 binary that expects X11
+# shared libraries the minimal container never has, failing at import with
+# e.g. "libxcb.so.1: cannot open shared object file". Installing the actual
+# system libraries sidesteps that fight entirely, regardless of which
+# opencv variant pip ends up resolving.
+[phases.setup]
+aptPkgs = ["libgl1", "libglib2.0-0", "libsm6", "libxext6", "libxrender1", "libxcb1"]
