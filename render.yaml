@@ -15,3 +15,5 @@ services:
         value: "1"
       - key: MKL_NUM_THREADS
         value: "1"
+      - key: MALLOC_TRIM_THRESHOLD_
+        value: "65536"

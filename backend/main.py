@@ -127,23 +127,18 @@ class LoadedModel:
         self.key = key
         self.label = label
         self.path = path
-        self.model = None
         self.size_mb = round(path.stat().st_size / (1024 * 1024), 2) if path else None
         # Prefixed with the class key so it's always identifiable downstream
         # (the `model` field on each detection, and the frontend's
         # modelLabel() pattern match) even when the file itself is named
-        # generically, e.g. models/crab-pot/yolo26m.pt -> "crab_pot_yolo26m".
+        # generically, e.g. models/crab-pot/yolo26s.pt -> "crab_pot_yolo26s".
         self.model_id = f"{key}_{path.stem}" if path else None
-
-    def load(self):
-        from ultralytics import YOLO  # imported lazily so /health works without it installed
-        self.model = YOLO(str(self.path))
 
 
 def _discover_model_paths(spec: dict) -> List[Path]:
     # Recursive, and matched against the path *relative to models/* rather
     # than just the filename — a model dropped in a class-named subfolder
-    # (models/crab-pot/yolo26m.pt) is matched by the folder name even when
+    # (models/crab-pot/yolo26s.pt) is matched by the folder name even when
     # the filename itself is generic.
     return sorted(
         p for p in MODELS_DIR.rglob("*.pt")
@@ -168,21 +163,16 @@ def load_models():
             # so /health can still report it as "Unavailable".
             MODELS.append(LoadedModel(spec["key"], spec["label"], None))
             continue
-        # In cloud containers with 512MB RAM, avoid loading duplicate size variants;
-        # prefer the lightweight 's' variant over 'm'.
+        # In cloud containers with 512MB RAM, avoid duplicate size variants
         if len(paths) > 1 and any("yolo26s" in p.name.lower() for p in paths):
             paths = [p for p in paths if "yolo26m" not in p.name.lower()]
 
         for path in paths:
-            loaded = LoadedModel(spec["key"], spec["label"], path)
-            try:
-                loaded.load()
-                gc.collect()
-            except Exception as exc:  # startup diagnostics only
-                print(f"[startup] failed to load {spec['key']} from {path}: {exc}")
-                loaded.model = None
-            MODELS.append(loaded)
+            MODELS.append(LoadedModel(spec["key"], spec["label"], path))
     gc.collect()
+
+
+load_models()
 
 
 
@@ -222,9 +212,12 @@ def _nms(boxes: List[dict], iou_threshold: float = NMS_IOU_THRESHOLD) -> List[di
 
 
 def _run_model(loaded: LoadedModel, image: Image.Image) -> List[dict]:
-    if loaded.model is None:
+    if loaded.path is None or not loaded.path.exists():
         return []
-    results = loaded.model.predict(image, verbose=False)
+    from ultralytics import YOLO
+    model = YOLO(str(loaded.path))
+    with torch.inference_mode():
+        results = model.predict(image, imgsz=640, verbose=False)
     out = []
     for r in results:
         boxes = r.boxes
@@ -245,6 +238,13 @@ def _run_model(loaded: LoadedModel, image: Image.Image) -> List[dict]:
                 "class": class_name,
                 "model": loaded.model_id,
             })
+    del model, results
+    gc.collect()
+    try:
+        import ctypes
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except Exception:
+        pass
     return out
 
 
@@ -478,7 +478,7 @@ def health():
 
     models_status = {}
     for spec in MODEL_SPECS:
-        variants = [m for m in by_key.get(spec["key"], []) if m.model is not None]
+        variants = [m for m in by_key.get(spec["key"], []) if m.path is not None and m.path.exists()]
         # model_id/size_mb mirror the first loaded variant for backward
         # compatibility with a single-variant reading of this response;
         # `variants` lists all of them when there's more than one.
