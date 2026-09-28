@@ -432,6 +432,22 @@ def export_annotations():
 
 # -- Health -----------------------------------------------------------------------
 
+@app.get("/debug/models")
+def debug_models():
+    """Temporary — shows exactly what's on disk in MODELS_DIR inside the
+    running container, so a "loaded: false" on /health can be diagnosed
+    without guessing at the build platform's internals. Remove once the
+    model-loading issue is confirmed fixed."""
+    if not MODELS_DIR.exists():
+        return {"models_dir": str(MODELS_DIR), "exists": False}
+    found = [
+        {"path": str(p.relative_to(MODELS_DIR)), "size_mb": round(p.stat().st_size / (1024 * 1024), 2)}
+        for p in MODELS_DIR.rglob("*.pt")
+    ]
+    all_entries = [str(p.relative_to(MODELS_DIR)) for p in MODELS_DIR.rglob("*")]
+    return {"models_dir": str(MODELS_DIR), "exists": True, "pt_files_found": found, "all_entries": all_entries}
+
+
 @app.get("/health")
 def health():
     by_key: Dict[str, List[LoadedModel]] = {}
