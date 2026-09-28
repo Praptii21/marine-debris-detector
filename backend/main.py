@@ -57,6 +57,16 @@ app.add_middleware(
     expose_headers=["Content-Disposition"],
 )
 
+
+@app.get("/")
+def root():
+    return {
+        "status": "ok",
+        "service": "Marine Debris Detector API",
+        "endpoints": ["/health", "/detect", "/extract-metadata", "/annotations", "/annotations/export"]
+    }
+
+
 # Kept in sync with src/utils/taxonomy.js's DEBRIS_CLASSES.
 #
 # Maps a model's own internal class name (lowercased) to our canonical
