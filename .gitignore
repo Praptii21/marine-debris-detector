@@ -4,12 +4,12 @@ dist
 *.local
 .env
 
-# Backend — model weights and generated annotation data are not source
+# Backend — generated annotation data is not source (model weights ARE
+# committed — deploying from GitHub needs them, see backend/models/)
 backend/__pycache__/
 backend/**/__pycache__/
 backend/.venv/
 backend/venv/
-backend/models/**/*.pt
 backend/annotations/images/*
 !backend/annotations/images/.gitkeep
 backend/annotations/labels/*

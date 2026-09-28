@@ -29,16 +29,19 @@ from PIL import Image
 from pydantic import BaseModel, Field
 
 from georef import SonarGeometry, VesselNav, georeference_yolo_bbox
+from db import (
+    init_db,
+    save_annotation_batch,
+    log_event,
+    annotated_image_count,
+    iter_export_labels,
+    iter_export_images,
+)
 
 BASE_DIR = Path(__file__).resolve().parent
 MODELS_DIR = BASE_DIR / "models"
-ANNOTATIONS_DIR = BASE_DIR / "annotations"
-IMAGES_DIR = ANNOTATIONS_DIR / "images"
-LABELS_DIR = ANNOTATIONS_DIR / "labels"
-REJECTED_LOG = ANNOTATIONS_DIR / "rejected.jsonl"
 
-for d in (MODELS_DIR, IMAGES_DIR, LABELS_DIR):
-    d.mkdir(parents=True, exist_ok=True)
+MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Primes psutil's internal counter — cpu_percent() compares against the last
 # call, so an unprimed first call always reads 0.0.
@@ -143,6 +146,11 @@ _IMAGE_CACHE_LIMIT = 200
 
 
 @app.on_event("startup")
+def startup():
+    init_db()
+    load_models()
+
+
 def load_models():
     for spec in MODEL_SPECS:
         paths = _discover_model_paths(spec)
@@ -285,6 +293,8 @@ async def detect(file: UploadFile = File(...), metadata: Optional[str] = Form(No
     global _last_inference_ms
     _last_inference_ms = elapsed_ms
 
+    log_event("detect", {"image_id": image_id, "count": len(detections), "elapsed_ms": elapsed_ms})
+
     return {
         "image_id": image_id,
         "detections": detections,
@@ -398,29 +408,7 @@ async def save_annotations(annotations: List[Annotation]):
     for a in annotations:
         by_image.setdefault(a.image_id, []).append(a)
 
-    saved = 0
-    for image_id, items in by_image.items():
-        lines = []
-        for a in items:
-            if a.rejected:
-                with REJECTED_LOG.open("a") as fh:
-                    fh.write(json.dumps({**a.model_dump(), "logged_at": time.time()}) + "\n")
-                continue
-            cx, cy, w, h = a.bbox_normalized
-            lines.append(f"{a.class_id} {cx:.6f} {cy:.6f} {w:.6f} {h:.6f}")
-            saved += 1
-
-        if lines:
-            label_path = LABELS_DIR / f"{image_id}.txt"
-            with label_path.open("a") as fh:
-                fh.write("\n".join(lines) + "\n")
-
-        cached = _IMAGE_CACHE.get(image_id)
-        if cached:
-            raw, ext = cached
-            dest = IMAGES_DIR / f"{image_id}{ext}"
-            if not dest.exists():
-                dest.write_bytes(raw)
+    saved, rejected = save_annotation_batch(by_image, _IMAGE_CACHE)
 
     return {"saved": saved, "images": len(by_image)}
 
@@ -429,11 +417,10 @@ async def save_annotations(annotations: List[Annotation]):
 def export_annotations():
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
-        for label_path in sorted(LABELS_DIR.glob("*.txt")):
-            zf.write(label_path, arcname=f"labels/{label_path.name}")
-        for image_path in sorted(IMAGES_DIR.iterdir()):
-            if image_path.is_file():
-                zf.write(image_path, arcname=f"images/{image_path.name}")
+        for image_id, label_text in iter_export_labels():
+            zf.writestr(f"labels/{image_id}.txt", label_text)
+        for image_id, ext, data in iter_export_images():
+            zf.writestr(f"images/{image_id}{ext}", data)
     buf.seek(0)
     filename = f"deepscan-training-export-{time.strftime('%Y%m%d-%H%M%S')}.zip"
     return StreamingResponse(
@@ -468,7 +455,7 @@ def health():
         "status": "ok",
         "models": models_status,
         "last_inference_ms": _last_inference_ms,
-        "annotations": {"image_count": len(list(LABELS_DIR.glob("*.txt")))},
+        "annotations": {"image_count": annotated_image_count()},
         "system": {
             "cpu_percent": psutil.cpu_percent(interval=None),
             "memory_percent": psutil.virtual_memory().percent,
