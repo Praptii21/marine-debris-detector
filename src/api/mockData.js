@@ -32,7 +32,7 @@ export const survey = {
 export const scanLines = [
   { id: "L-198", site: "Chennai Approach Channel", imageSrc: "/samples/sss-mine11.jpg", detections: 5, topClass: classLabel("mine"), status: "unreviewed", location: { lat: 13.2688, lon: 80.3554 } },
   { id: "L-203", site: "Ennore Anchorage", imageSrc: "/samples/sss-crabpot1.jpg", detections: 3, topClass: classLabel("crab_pot"), status: "unreviewed", location: null },
-  { id: "L-193", site: "Kochi Harbor Channel", imageSrc: "/samples/sss-rod-boat7.jpg", detections: 1, topClass: classLabel("shipwreck"), status: "unreviewed", location: null },
+  { id: "L-193", site: "Kochi Harbor Channel", imageSrc: "/samples/sss-rod-boat7.jpg", detections: 1, topClass: classLabel("shipwreck"), status: "unreviewed", location: { lat: 12.7000, lon: 80.4000 } },
   { id: "L-194", site: "Chennai Offshore Block", imageSrc: "/samples/sss-debris9-nice.jpg", detections: 3, topClass: classLabel("shipwreck"), status: "unreviewed", location: { lat: 13.0206, lon: 80.4223 } },
   { id: "L-195", site: "Lakshadweep Reef Survey", imageSrc: "/samples/sss3.jpg", detections: 1, topClass: classLabel("shipwreck"), status: "unreviewed", location: null },
   { id: "L-196", site: "Netrani Island Approach", imageSrc: "/samples/sss-bicycle5.jpg", detections: 2, topClass: classLabel("shipwreck"), status: "unreviewed", location: null },
@@ -53,7 +53,7 @@ export const detections = [
     model: "shipwreck_ship-model",
     source: 'model',
     status: classifyConfidence(0.8158, "shipwreck"),
-    location: { lat: 9.9312, lon: 76.2673 },
+    location: { lat: 12.7000, lon: 80.4000 },
     boundingBoxM: null,
     areaM2: null,
     acousticShadowM: null,

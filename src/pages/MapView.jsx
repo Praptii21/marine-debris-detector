@@ -72,7 +72,6 @@ export default function MapView() {
   const [survey, setSurvey] = useState(null)
   const [detections, setDetections] = useState([])
   const [lines, setLines] = useState([])
-  const [sites, setSites] = useState([])
   const [basemap, setBasemap] = useState('map')
 
   // New state for Heatmap Feature
@@ -85,7 +84,6 @@ export default function MapView() {
     getSurvey().then(setSurvey)
     getDetections().then(setDetections)
     getScanLines().then(setLines)
-    getSites().then(setSites)
   }, [])
 
   // Fetch Risk Heatmap Data
@@ -97,6 +95,22 @@ export default function MapView() {
   }, [])
 
   const imageByLineId = Object.fromEntries(lines.map((l) => [l.id, l.imageSrc]))
+
+  // Grouped from the real scan lines rather than a separate list, so the
+  // flagged count here always matches what Overview/Reports show — no
+  // second source of truth to fall out of sync.
+  const sites = Object.values(
+    lines.reduce((acc, l) => {
+      const key = l.site
+      if (!acc[key]) acc[key] = { name: key, flagged: 0, lat: null, lon: null }
+      acc[key].flagged += l.detections
+      if (l.location && acc[key].lat == null) {
+        acc[key].lat = l.location.lat
+        acc[key].lon = l.location.lon
+      }
+      return acc
+    }, {})
+  )
   const heatPoints = riskZones.map((z) => [z.lat, z.lng, z.intensity]);
 
   return (
@@ -111,15 +125,15 @@ export default function MapView() {
             {activeView === 'detections'
               ? 'Detections by location'
               : activeView === 'risk'
-                ? 'Predicted Accumulation Risk'
-                : 'Detections & Risk Overlay'}
+                ? 'Known Accumulation Zones'
+                : 'Detections & Accumulation Zones'}
           </h1>
           <p style={{ color: 'var(--ink-dim)', marginTop: 8, maxWidth: '68ch' }}>
             {activeView === 'detections'
               ? 'GPS coordinates recovered from sonar navigation metadata, plotted on OpenStreetMap.'
               : activeView === 'risk'
-                ? 'Predicted debris accumulation risk based on port proximity, fishing density, river discharge, and coastal bathymetry.'
-                : 'Detections overlaid on predicted risk zones for survey prioritization.'}
+                ? 'Reference layer — known debris accumulation geography, for survey prioritisation.'
+                : 'Detections plotted over known accumulation zones for survey prioritisation.'}
           </p>
         </div>
 
@@ -321,7 +335,8 @@ export default function MapView() {
                   <div key={s.name} style={{ padding: '13px 18px', borderBottom: '1px solid var(--border)' }}>
                     <div style={{ fontSize: 13.5, color: 'var(--ink)', marginBottom: 3 }}>{s.name}</div>
                     <div className="mono" style={{ fontSize: 11, color: 'var(--ink-faint)' }}>
-                      {s.lat.toFixed(4)}°N, {s.lon.toFixed(4)}°E — {s.flagged} flagged
+                      {s.lat != null ? `${s.lat.toFixed(4)}°N, ${s.lon.toFixed(4)}°E — ` : ''}
+                      {s.flagged} flagged
                     </div>
                   </div>
                 ))}

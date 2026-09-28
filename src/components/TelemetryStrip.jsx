@@ -2,7 +2,7 @@
 // and inference latency are already computed backend-side per detection run
 // (see backend/main.py's _last_inference_ms and models_status), CPU/memory
 // come from psutil. Nothing here is a placeholder number.
-export default function TelemetryStrip({ health, healthError }) {
+export default function TelemetryStrip({ health, healthError, lastSync }) {
   // const firstLoaded = health?.models ? Object.values(health.models).find((m) => m.loaded) : null
   // when one combined model is built add these lines of code.
   // const items = [
@@ -28,6 +28,12 @@ export default function TelemetryStrip({ health, healthError }) {
     {
       label: 'Memory',
       value: health?.system?.memory_percent != null ? `${health.system.memory_percent.toFixed(0)}%` : '—',
+    },
+    {
+      // Last time this UI actually reached the edge/AUV's detection engine —
+      // not a claim of continuous live streaming, just a real poll timestamp.
+      label: 'Last synced',
+      value: lastSync ? lastSync.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—',
     },
   ]
 

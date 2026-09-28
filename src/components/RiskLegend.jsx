@@ -19,7 +19,7 @@ export default function RiskLegend() {
         <span>Crit</span>
       </div>
       <div style={{ marginTop: 8, paddingTop: 7, borderTop: '1px solid var(--border)', fontSize: 10, color: 'var(--ink-faint)', lineHeight: 1.35 }}>
-        Aggregated from port proximity, fishing density, river inflow & bathymetry.
+        Reference layer — known debris accumulation geography.
       </div>
     </div>
   )

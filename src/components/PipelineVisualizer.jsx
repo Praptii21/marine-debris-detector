@@ -392,56 +392,68 @@ export default function PipelineVisualizer({ imageSrc, detections }) {
   const render = useCallback(() => {
     if (!imageSrc) return
     const img = new Image()
-    img.crossOrigin = 'anonymous'
+    // No crossOrigin here: every imageSrc is same-origin (/samples/*.jpg) or
+    // a blob: URL, neither needs CORS mode to read pixel data via canvas.
+    // Setting it anyway caused a cache collision — AnnotationTool/SonarCanvas
+    // loads this exact same URL into a plain <img> with no crossOrigin on the
+    // same page, and requesting it a second time with crossOrigin='anonymous'
+    // intermittently reused that cached response, silently tainting the
+    // canvas and throwing inside getImageData below — leaving the panel
+    // stuck on "Processing..." until a reload happened to fetch it fresh.
     img.onload = () => {
-      const ratio = img.naturalHeight / img.naturalWidth
-      // Increased canvas render resolution to 220px width for higher fidelity
-      const dW = 220
-      const dH = Math.round(dW * ratio)
+      try {
+        const ratio = img.naturalHeight / img.naturalWidth
+        // Increased canvas render resolution to 220px width for higher fidelity
+        const dW = 220
+        const dH = Math.round(dW * ratio)
 
-      const g = toGray(img, dW, dH)
-      const raw = bc(g)
-      const cn = colNorm(g, dW, dH)
-      const cl = applyCLAHE(cn, dW, dH)
-      const enh = bc(cl)
+        const g = toGray(img, dW, dH)
+        const raw = bc(g)
+        const cn = colNorm(g, dW, dH)
+        const cl = applyCLAHE(cn, dW, dH)
+        const enh = bc(cl)
 
-      if (cRaw.current) putRGBA(cRaw.current, applyLUT(raw, dW, dH), dW, dH)
-      if (cPreA.current) putRGBA(cPreA.current, applyLUT(cn, dW, dH), dW, dH)
-      if (cPreB.current) putRGBA(cPreB.current, applyLUT(enh, dW, dH), dW, dH)
+        if (cRaw.current) putRGBA(cRaw.current, applyLUT(raw, dW, dH), dW, dH)
+        if (cPreA.current) putRGBA(cPreA.current, applyLUT(cn, dW, dH), dW, dH)
+        if (cPreB.current) putRGBA(cPreB.current, applyLUT(enh, dW, dH), dW, dH)
 
-      const top = dets.reduce((b, d) => ((d.confidence || 0) > (b ? (b.confidence || 0) : 0) ? d : b), null)
-      let box = null
-      if (top && top.bboxPx) {
-        const sc = dW / img.naturalWidth
-        box = {
-          x1: Math.round(top.bboxPx.x1 * sc),
-          y1: Math.round(top.bboxPx.y1 * sc),
-          x2: Math.round(top.bboxPx.x2 * sc),
-          y2: Math.round(top.bboxPx.y2 * sc),
+        const top = dets.reduce((b, d) => ((d.confidence || 0) > (b ? (b.confidence || 0) : 0) ? d : b), null)
+        let box = null
+        if (top && top.bboxPx) {
+          const sc = dW / img.naturalWidth
+          box = {
+            x1: Math.round(top.bboxPx.x1 * sc),
+            y1: Math.round(top.bboxPx.y1 * sc),
+            x2: Math.round(top.bboxPx.x2 * sc),
+            y2: Math.round(top.bboxPx.y2 * sc),
+          }
+        } else if (top && top.bboxPct) {
+          box = {
+            x1: Math.round(top.bboxPct.left * dW),
+            y1: Math.round(top.bboxPct.top * dH),
+            x2: Math.round((top.bboxPct.left + top.bboxPct.width) * dW),
+            y2: Math.round((top.bboxPct.top + top.bboxPct.height) * dH),
+          }
+        } else if (dets.length > 0) {
+          box = {
+            x1: Math.round(dW * 0.28),
+            y1: Math.round(dH * 0.22),
+            x2: Math.round(dW * 0.72),
+            y2: Math.round(dH * 0.78),
+          }
         }
-      } else if (top && top.bboxPct) {
-        box = {
-          x1: Math.round(top.bboxPct.left * dW),
-          y1: Math.round(top.bboxPct.top * dH),
-          x2: Math.round((top.bboxPct.left + top.bboxPct.width) * dW),
-          y2: Math.round((top.bboxPct.top + top.bboxPct.height) * dH),
-        }
-      } else if (dets.length > 0) {
-        box = {
-          x1: Math.round(dW * 0.28),
-          y1: Math.round(dH * 0.22),
-          x2: Math.round(dW * 0.72),
-          y2: Math.round(dH * 0.78),
-        }
+
+        const confLabel = top ? `${top.class || 'Target'} ${(top.confidence || 0).toFixed(2)}` : ''
+        const dir = (top && top.shadow_direction) ? top.shadow_direction : 'right'
+
+        if (cDet.current) drawDetection(cDet.current, applyLUT(enh, dW, dH).slice(), dW, dH, box, confLabel)
+        if (cAc.current) drawAcoustic(cAc.current, applyLUT(enh, dW, dH).slice(), dW, dH, box, dir)
+
+        setReady(true)
+      } catch (err) {
+        console.warn('PipelineVisualizer: failed to process image', err)
+        setReady(false)
       }
-
-      const confLabel = top ? `${top.class || 'Target'} ${(top.confidence || 0).toFixed(2)}` : ''
-      const dir = (top && top.shadow_direction) ? top.shadow_direction : 'right'
-
-      if (cDet.current) drawDetection(cDet.current, applyLUT(enh, dW, dH).slice(), dW, dH, box, confLabel)
-      if (cAc.current) drawAcoustic(cAc.current, applyLUT(enh, dW, dH).slice(), dW, dH, box, dir)
-
-      setReady(true)
     }
     img.onerror = () => {
       setReady(false)
