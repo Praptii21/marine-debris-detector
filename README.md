@@ -37,6 +37,34 @@ Worth being upfront about, since it matters for how this gets presented:
 
 What actually happens to one uploaded tile, end to end:
 
+```mermaid
+flowchart TD
+    A["Upload — drag-drop or sample gallery<br/>(image formats only — .xtf/.jsf accepted<br/>by the picker but not actually parsed)"] --> B["POST /detect"]
+    B --> C["Decode image (PIL)"]
+    C --> D["YOLO inference<br/>unified model, full debris taxonomy"]
+    D --> E["Class-agnostic NMS (IoU 0.5)"]
+    E --> F{"Nav fix supplied?"}
+    F -- yes --> G["Georeference<br/>pixel offset → ground range → heading → UTM → lat/lon"]
+    F -- no --> H["No coordinates"]
+    G --> I{"Confidence ≥ 50%?"}
+    H --> I
+    I -- yes --> J["Auto-confirmed"]
+    I -- no --> K["Needs review"]
+    J --> L["Review page"]
+    K --> L
+    L --> M{"Operator action"}
+    M -- Confirm --> N[("annotations")]
+    M -- "Draw missed box" --> N
+    M -- Reject --> O[("rejected_annotations")]
+    N --> P["GET /annotations/export<br/>YOLO-format .zip for retraining"]
+    O --> P
+    L --> Q["Export: CSV / JSON / PDF / KML"]
+```
+
+*(The live preprocessing visualizer on the Review page — column normalization + CLAHE — runs client-side
+on the same uploaded tile in parallel with this, for operator inspection; it isn't a step the detection
+request itself passes through.)*
+
 **1. Ingest** (`src/pages/Upload.jsx` → `POST /detect`)
 File comes in via drag-drop or the built-in sample gallery, alongside survey metadata (vessel, nav fix,
 depth, altitude) — auto-filled from EXIF GPS when present, manual otherwise. `.xtf`/`.jsf`/`.segy` are
