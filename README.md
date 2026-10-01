@@ -33,6 +33,58 @@ Worth being upfront about, since it matters for how this gets presented:
 - **Metrics and annotations now persist in Postgres (Neon)**, not local files — see
   [Persistence](#persistence--metrics) below.
 
+## Pipeline
+
+What actually happens to one uploaded tile, end to end:
+
+**1. Ingest** (`src/pages/Upload.jsx` → `POST /detect`)
+File comes in via drag-drop or the built-in sample gallery, alongside survey metadata (vessel, nav fix,
+depth, altitude) — auto-filled from EXIF GPS when present, manual otherwise. `.xtf`/`.jsf`/`.segy` are
+accepted by the file picker, but the backend only actually decodes standard raster images (`PIL.Image.open`,
+`backend/main.py`) — there's no binary XTF/JSF/SEG-Y parser. Real sonar-format ingestion is scoped as
+future work, not implemented.
+
+**2. Preprocessing** (`src/components/PipelineVisualizer.jsx`, mirrors `backend` conceptually — see note below)
+Per-column gain normalization (removes along-track striping inherent to side-scan waterfalls) and
+sonar-aware CLAHE (clip limit 2.5) for local contrast, so a model trained on acoustic returns isn't fed a
+raw, unequalized image. This runs client-side on the actual uploaded tile for the Review page's live
+visualizer; the detection models themselves consume the raw image directly.
+
+**3. Detection** (`backend/main.py::detect`)
+A YOLO model (`ultralytics`), trained across the full taxonomy — crab pot, shipwreck, mine, ghost net,
+unknown debris, person-in-water, airplane, non-mine object — runs inference on the tile. Class-agnostic
+NMS (`_nms`, IoU 0.5) merges overlapping boxes.
+
+**4. Acoustic-context overlay**
+The Review page draws a shadow corridor next to each detection, illustrating the acoustic-shadow evidence
+a human reviewer would check. This is a heuristic visualization (fixed corridor geometry relative to the
+box), not a separately-trained shadow-classification model — worth knowing before presenting it as model
+output.
+
+**5. Confidence triage** (`src/utils/taxonomy.js::classifyConfidence`)
+Each detection is auto-tiered: **≥ 50% confidence → auto-confirmed**, below that → needs-review. (Pick a
+number and be consistent about it when presenting — a pitch deck earlier said 70%; the shipped code uses
+50%.) Person-in-water detections always render as a distinct critical case regardless of confidence —
+that one's never auto-buried.
+
+**6. Georeferencing** (`backend/georef.py`)
+For every kept detection: pixel offset from nadir → ground range → rotated by vessel heading → UTM
+easting/northing → WGS84 lat/lon, via `pyproj`. Runs only when a nav fix (lat/lon/heading) was supplied
+with the upload; otherwise detections have no coordinates.
+
+**7. Operator review** (`src/pages/Review.jsx`, `src/components/AnnotationTool.jsx`)
+Confirm, reject, or draw a missed box with a class picker. No separate "mark uncertain" action — that's
+what the needs-review tier already is. Confirms/rejects/new boxes queue as pending until **Save & Next**.
+
+**8. Persistence + retraining loop** (`backend/db.py`)
+Save writes confirmed boxes to `annotations`, rejections to `rejected_annotations` (hard negatives), and
+archives the source image — all to Postgres. `GET /annotations/export` rebuilds a YOLO-format training
+`.zip` from those tables on demand; there's no automatic retraining trigger, a human runs that separately.
+
+**9. Reporting** (`src/pages/Reports.jsx`, `src/utils/exportReport.js`, `src/utils/pdfReport.js`)
+Filtered detection sets export as CSV, JSON, or a multi-section PDF. Map view adds KML export for
+GIS tools (QGIS/ArcGIS-compatible).
+
 ## Screens
 
 ![Overview dashboard](docs/screenshots/dashboard-overview.jpg)
