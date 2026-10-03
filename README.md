@@ -139,6 +139,160 @@ GIS tools (QGIS/ArcGIS-compatible).
 - **Reports** (`/reports`) — searchable/filterable detection archive (class, confidence threshold), export
   as CSV, JSON, or a multi-section PDF survey report.
 
+## Results & metrics
+
+All numbers are precision / recall / mAP50 on **our own held-out split** (not a public leaderboard), and
+match the Benchmarks section of the landing page (`src/components/landing/Benchmarks.jsx`).
+
+### 1. What sonar-specific preprocessing buys us
+
+YOLO26n, crab-pot dataset, identical training setup:
+
+| Configuration | Precision | Recall | mAP50 |
+|---|---|---|---|
+| Raw sonar imagery | 0.4730 | 0.4000 | 0.3835 |
+| + column normalisation | 0.5962 | 0.4853 | 0.4592 |
+| **+ sonar-aware augmentation** | **0.7449** | **0.6528** | **0.6021** |
+
+**≈ +57% relative mAP50** over raw imagery (0.3835 → 0.6021).
+
+### 2. Why we ship the smallest model
+
+Identical ~3k-image dataset:
+
+| Model | Precision | Recall | mAP50 | Size |
+|---|---|---|---|---|
+| **YOLO26n** (deployed) | 0.4730 | 0.4000 | 0.3860 | 5.3 MB |
+| YOLO26s | 0.3995 | 0.4261 | 0.3735 | — |
+| YOLO26m | 0.4710 | 0.4520 | 0.4260 | — |
+
+Differences sit at or below our measured mAP50 noise floor (**±0.05**), so scaling the model up does not
+reliably help on this data. The nano model is deployed.
+
+### 3. Runtime
+
+| Metric | Value |
+|---|---|
+| CPU inference per tile | **224 ms** |
+| Throughput | **4.5 FPS** |
+| Model size | **5.3 MB** |
+
+> [!NOTE]
+> The preprocessing table is for the crab-pot dataset; the production unified model covers more classes and
+> its per-class metrics are not yet reported here. Treat the headline numbers as indicative, not a
+> guarantee on unseen survey conditions.
+
+## Risk & accumulation zones
+
+The Map page overlays a **risk / accumulation-zone reference layer** (`public/data/risk_data.json`) on the
+georeferenced detections, to help operators prioritise where to survey and recover first.
+
+- **Inputs (hand-weighted):** port proximity, fishing density, shipping lanes, river outflow.
+- **Honest labelling:** this is a heuristic reference layer for prioritisation — *not* a trained or
+  "AI-predicted" model.
+- **Detection severity tiers** (shown on the landing page and map legend):
+
+| Tier | Typical classes | Meaning |
+|---|---|---|
+| Critical | Ghost nets, mines / ordnance, person-in-water | Immediate action; person-in-water is never auto-buried |
+| High | Shipwrecks, crab pots | Navigational / ghost-fishing hazard |
+| Moderate | Anchors, heavy cable, unknown debris | Recover when convenient |
+| Eco-protected | Coral / sensitive habitat buffers | Flag proximity of debris to protected areas |
+
+- **Basemaps:** OpenStreetMap, Esri satellite, hybrid. **Exports:** KML for QGIS/ArcGIS.
+
+![Map — risk overlay, satellite basemap](docs/screenshots/map-satellite.jpg)
+
+> [!NOTE]
+> The tier colours/labels on the landing page gallery are illustrative showcase data. The layer is static
+> today; aggregating real detection density from the `annotations`/`events` tables is the next step.
+
+## Impact
+
+Side-scan sonar surveys produce hours of mostly empty seafloor. AquaScan changes the operator's job from
+scrubbing everything to **reviewing the ambiguous detections**.
+
+- **Faster surveys** — operators start from the needs-review queue instead of raw waterfalls.
+  The landing page cites **~10× faster triage** (a target estimate, not yet measured in a field trial).
+- **Ghost-net / derelict-gear recovery** — every contact carries coordinates and confidence, so recovery
+  crews can be sent to the likeliest sites first. Landing page frames the opportunity as **~640k tonnes**
+  of gear lost annually (sector-level figure, not something this system measures).
+- **Safer navigation** — wrecks and mine-like contacts are flagged and positioned before a vessel crosses
+  the line; person-in-water is always surfaced as a critical case.
+- **Better models over time** — every confirm / reject / drawn box becomes training data (hard negatives
+  included), so the model improves with use.
+- **Expert-in-the-loop, not replacement** — aligned with the MoES / NIOT problem statement (SIH26057).
+
+## Feasibility
+
+| Area | Status |
+|---|---|
+| Detection (YOLO, server-side) | ✅ Working, deployed |
+| Georeferencing (`pyproj`, UTM → WGS84) | ✅ Working, needs a nav fix at upload |
+| Review / annotation / active-learning data loop | ✅ Working, Postgres-backed |
+| Reports (CSV / JSON / PDF) + KML | ✅ Working |
+| Live preprocessing visualiser | ✅ Working (client-side) |
+| Risk-zone layer | ⚠️ Static heuristic data |
+| Native `.xtf` / `.jsf` / SEG-Y ingestion | ❌ Not implemented (raster images only) |
+| Automatic retraining trigger | ❌ Manual export + train |
+| Edge packaging (ONNX / TFLite) | 🔜 Proposed, see below |
+
+**Why it is practical:** a 5.3 MB model on CPU, a standard FastAPI + Postgres stack, free-tier friendly
+hosting (Vercel, Railway, Neon), and open formats (YOLO labels, KML, CSV) that slot into existing GIS
+workflows.
+
+**Main risks:** limited and class-imbalanced sonar data, domain shift between sonar systems and seabed
+types, and the need for real-format ingestion before using live survey output.
+
+## Scalability
+
+```mermaid
+flowchart LR
+    U[Operators / surveys] --> FE[React frontend - Vercel CDN]
+    FE --> API[FastAPI - stateless containers]
+    API --> Q{{Future: job queue}}
+    Q --> W[YOLO workers - CPU or GPU]
+    API --> DB[(Neon Postgres - pooled)]
+    W --> DB
+    DB --> EXP[YOLO export for retraining]
+```
+
+- **Stateless API in Docker** — scale horizontally by adding replicas; no local disk state (annotations
+  moved from files to Postgres for this reason).
+- **Pooled DB connections** (Neon pooler) and **batched inserts** on save.
+- **Small model** — 224 ms/tile on CPU means one core handles roughly 4–5 tiles/s; cost scales linearly.
+- **Per-tile processing** — each tile is independent, so batches parallelise naturally; class-agnostic NMS
+  merges overlapping boxes within a tile. (Stitching detections across tile borders is not implemented.)
+- **Not yet built:** async job queue for batch surveys, GPU workers, object storage for large images
+  (currently image bytes are archived in Postgres), multi-tenant auth and per-survey projects.
+
+## Edge deployment
+
+Because the shipped model is just **5.3 MB** and runs at **~4.5 FPS on CPU**, it is a good fit for
+drone-/vessel-class hardware with no GPU.
+
+```mermaid
+flowchart LR
+    S[Side-scan sonar] --> E[Edge unit - Jetson / Raspberry Pi / ruggedised laptop]
+    N[GPS + heading] --> E
+    E -->|"YOLO26n, georeference, triage"| L[Local detections + KML]
+    L -->|"when connectivity returns"| C[Cloud: review + retraining]
+```
+
+**Proposed path (not implemented yet):** export weights to ONNX / TFLite, run the same georeferencing
+module on-device, store detections locally, and sync to the cloud when bandwidth allows. This gives
+at-sea, near-real-time hazard flags (mines, wrecks, person-in-water) without a satellite uplink, with the
+cloud app used for review, reporting and retraining.
+
+## Roadmap
+
+- Native XTF / JSF / SEG-Y parsers.
+- Replace static risk layer with density aggregated from confirmed detections over time.
+- Per-class metrics on the production unified model; larger, more diverse sonar datasets.
+- ONNX / TFLite export and an edge runtime.
+- Automatic retraining pipeline, job queue, and object storage.
+- Auth and multi-survey project management.
+
 ## Architecture
 
 ```
