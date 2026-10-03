@@ -17,7 +17,6 @@ const LINES = [
 
 const STATS = [
   { val: '10x', label: 'Faster Survey Triage' },
-  { val: '±0.4m', label: 'Target GPS Accuracy' },
   { val: '640k', label: 'Tonnes Targeted Annually' },
 ]
 
@@ -55,7 +54,7 @@ export default function Impact() {
           </Reveal>
 
           {/* Quick Stats Grid */}
-          <Reveal delay={150} className="grid grid-cols-3 gap-3 border-t border-line/60 pt-6">
+          <Reveal delay={150} className="grid grid-cols-2 gap-3 border-t border-line/60 pt-6">
             {STATS.map((s) => (
               <div key={s.label}>
                 <p className="font-mono text-2xl sm:text-3xl font-bold text-cyan-glow">{s.val}</p>

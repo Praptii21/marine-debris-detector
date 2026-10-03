@@ -56,13 +56,17 @@ export default function AnnotationTool({
   const [pendingClass, setPendingClass] = useState(DEBRIS_CLASSES[0].key)
   // Matches the container's box to the real image's aspect ratio so
   // bbox_pct overlays land exactly where they should — falls back to a
-  // wide placeholder ratio until the real image reports its size (or
-  // forever, for the procedural fallback, which has no natural size).
+  // wide placeholder ratio only for the very first render (or forever, for
+  // the procedural fallback, which has no natural size). Deliberately NOT
+  // reset on every imageSrc change: detections for the new line arrive and
+  // render before the new image's onLoad fires, so resetting to a hardcoded
+  // ratio here left a window where boxes rendered against a container sized
+  // for the wrong shape — visible as boxes overflowing past the image edge
+  // until onLoad caught up (worse for cached images that decode near-
+  // instantly). Keeping the previous image's aspect as a placeholder means
+  // the container is always sized to *some* real image's shape, not an
+  // arbitrary one.
   const [aspect, setAspect] = useState(1.6)
-
-  useEffect(() => {
-    setAspect(1.6)
-  }, [imageSrc])
 
   const cancelDraft = () => {
     setDragging(false)
@@ -248,30 +252,39 @@ export default function AnnotationTool({
               )}
             </svg>
 
-            {boxes.map((b) => (
-              <span
-                key={`label-${b.id}`}
-                className="mono"
-                onClick={() => onSelectBox(b.id)}
-                style={{
-                  position: 'absolute',
-                  top: `${b.bboxPct.top * 100}%`,
-                  left: `${b.bboxPct.left * 100}%`,
-                  transform: 'translateY(-100%)',
-                  background: (VARIANT_STYLE[b.variant] || VARIANT_STYLE['needs-review']).stroke,
-                  color: '#04211f',
-                  fontSize: 10.5,
-                  fontWeight: 600,
-                  padding: '2px 6px',
-                  borderRadius: 3,
-                  whiteSpace: 'nowrap',
-                  cursor: 'pointer',
-                  pointerEvents: drawMode ? 'none' : 'auto',
-                }}
-              >
-                {b.label}
-              </span>
-            ))}
+            {boxes.map((b) => {
+              // A box sitting near the right edge would otherwise grow its
+              // label rightward past the container's overflow:hidden and get
+              // visually cut off — anchor from the box's right edge instead
+              // so the label grows leftward and stays fully in view.
+              const anchorRight = b.bboxPct.left > 0.5
+              return (
+                <span
+                  key={`label-${b.id}`}
+                  className="mono"
+                  onClick={() => onSelectBox(b.id)}
+                  style={{
+                    position: 'absolute',
+                    top: `${b.bboxPct.top * 100}%`,
+                    ...(anchorRight
+                      ? { right: `${Math.max(0, 1 - (b.bboxPct.left + b.bboxPct.width)) * 100}%` }
+                      : { left: `${b.bboxPct.left * 100}%` }),
+                    transform: 'translateY(-100%)',
+                    background: (VARIANT_STYLE[b.variant] || VARIANT_STYLE['needs-review']).stroke,
+                    color: '#04211f',
+                    fontSize: 10.5,
+                    fontWeight: 600,
+                    padding: '2px 6px',
+                    borderRadius: 3,
+                    whiteSpace: 'nowrap',
+                    cursor: 'pointer',
+                    pointerEvents: drawMode ? 'none' : 'auto',
+                  }}
+                >
+                  {b.label}
+                </span>
+              )
+            })}
 
             {draft?.finalized && draftRect && (
               <div

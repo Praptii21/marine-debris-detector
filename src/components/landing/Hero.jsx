@@ -67,14 +67,10 @@ export default function Hero() {
             </button>
           </div>
 
-          <div className="mt-10 grid grid-cols-3 gap-3 border-t border-line/60 pt-6 font-mono text-[11px]">
+          <div className="mt-10 grid grid-cols-2 gap-3 border-t border-line/60 pt-6 font-mono text-[11px]">
             <div>
               <p className="text-fg-faint">MODEL SPEED</p>
               <p className="mt-1 text-sm font-semibold text-fg">224 ms <span className="text-[10px] text-teal-glow">CPU</span></p>
-            </div>
-            <div>
-              <p className="text-fg-faint">GEO PRECISION</p>
-              <p className="mt-1 text-sm font-semibold text-fg">± 0.4 m <span className="text-[10px] text-cyan-glow">UTM</span></p>
             </div>
             <div>
               <p className="text-fg-faint">MAP GAIN</p>
@@ -89,8 +85,7 @@ export default function Hero() {
             {/* Telemetry Header */}
             <div className="flex items-center justify-between border-b border-line pb-3 font-mono text-[11px] text-fg-dim">
               <div className="flex items-center gap-2">
-                <span className="size-2 rounded-full bg-emerald-400 animate-ping" />
-                <span className="font-semibold text-fg">LIVE SSS FEED</span>
+                <span className="font-semibold text-fg">SSS FEED</span>
                 <span className="text-fg-faint">| PORT & STBD SWATH</span>
               </div>
               <div className="text-cyan-glow">
@@ -142,17 +137,11 @@ export default function Hero() {
 
       {/* Sub-strip Bar */}
       <div className="border-t border-line bg-deep/40 backdrop-blur-sm">
-        <Container className="flex flex-wrap items-center justify-between gap-y-2 py-3 font-mono text-[11px] text-fg-faint">
-          <div className="flex flex-wrap gap-x-6 gap-y-1">
-            <span>SSS · 100 m swath</span>
-            <span>Ground-range corrected</span>
-            <span>WGS84 → UTM Zone 44N</span>
-            <span>Unified YOLO Debris Taxonomy</span>
-          </div>
-          <div className="flex items-center gap-2 text-cyan-glow">
-            <span className="size-1.5 rounded-full bg-cyan-glow" />
-            <span>SIH26057 Hydrographic Standard</span>
-          </div>
+        <Container className="flex flex-wrap items-center gap-x-6 gap-y-1 py-3 font-mono text-[11px] text-fg-faint">
+          <span>SSS · 100 m swath</span>
+          <span>Ground-range corrected</span>
+          <span>WGS84 → UTM Zone 44N</span>
+          <span>Unified YOLO Debris Taxonomy</span>
         </Container>
       </div>
     </section>

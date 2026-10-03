@@ -242,7 +242,7 @@ export default function Features() {
         {/* 6 Core Capability Cards */}
         <div>
           <h3 className="font-sans text-xl font-semibold text-fg mb-6">
-            Engineered for Hydrographic Rigor
+            Engineered for Survey Teams & Coastal Authorities
           </h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {CORE_CAPABILITIES.map((f, i) => (

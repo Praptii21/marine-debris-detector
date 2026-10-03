@@ -20,7 +20,7 @@ export default function Nav({ isDark, toggleTheme }) {
               Aqua<span className="text-cyan-glow">Scan</span>
             </span>
             <span className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-fg-faint -mt-1">
-              Marine Debris & Hazard AI
+              Marine Debris & Hazard AI Detector
             </span>
           </div>
         </Link>
@@ -56,11 +56,6 @@ export default function Nav({ isDark, toggleTheme }) {
               </>
             )}
           </button>
-
-          <div className="hidden lg:flex items-center gap-2 font-mono text-[11px] text-fg-faint border border-line px-2.5 py-1 rounded bg-deep">
-            <span className="size-1.5 rounded-full bg-emerald-500 animate-ping" />
-            <span>455 kHz SSS · ACTIVE</span>
-          </div>
 
           <Link
             to="/dashboard"

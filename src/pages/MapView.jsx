@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Tooltip, Popup, useMap } from 'react-leaflet'
 import { useNavigate } from 'react-router-dom'
-import { getDetections, getScanLines, getSites, getSurvey } from '../api/client.js'
+import { getDetections, getScanLines, getSurvey } from '../api/client.js'
 import SonarCanvas from '../components/SonarCanvas.jsx'
 import { classLabel } from '../utils/taxonomy.js'
 import HeatmapLayer from '../components/HeatmapLayer.jsx'

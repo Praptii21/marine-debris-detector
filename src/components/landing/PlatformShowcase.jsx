@@ -5,16 +5,16 @@ import { Container, Eyebrow, Reveal } from './primitives.jsx'
 const SCREENS = [
   {
     id: 'map-gis',
-    title: 'Geospatial Risk Map & Bathymetry Layer',
-    badge: 'GIS MAPPING & RISK ZONES',
-    url: 'aquascan.niot.gov.in/app/map',
+    title: 'Geospatial Risk Map & Detection Overlay',
+    badge: 'GIS DETECTION & RISK MAP',
+    url: 'aquascan.app/map',
     image: '/landing/map.jpg',
     description:
-      'Real-time projection of every detected sonar target on satellite and bathymetric charts. Color-coded risk hazard polygons automatically highlight critical ghost-net entanglement corridors and navigation hazards.',
+      'Real-time projection of every detected sonar target on satellite imagery, mapped with known debris accumulation factors — fishing ports, shipping lanes, river outflow and fishing density. Color-coded risk-zone overlays automatically highlight critical ghost-net entanglement corridors and navigation hazards.',
     specs: [
       { label: 'Projection', val: 'WGS84 → UTM Zone 44N' },
-      { label: 'Risk Model', val: 'Density & Depth Heatmap' },
-      { label: 'Layer Controls', val: 'Satellite · Bathymetry · SSS Track' },
+      { label: 'Risk Model', val: 'Detection Density & Spatial Risk Heatmap' },
+      { label: 'Layer Controls', val: 'Satellite · Risk Zones · SSS Track' },
       { label: 'Export Options', val: 'KML · GeoJSON · CSV GIS' },
     ],
     route: '/dashboard/map',
@@ -23,7 +23,7 @@ const SCREENS = [
     id: 'triage-review',
     title: 'Operator Triage & Waterfall Detection Review',
     badge: 'HUMAN-IN-THE-LOOP TRIAGE',
-    url: 'aquascan.niot.gov.in/app/review',
+    url: 'aquascan.app/review',
     image: '/landing/hero-review.jpg',
     description:
       'Hydrographic surveyors review YOLO detections directly on the continuous side-scan sonar waterfall. Fast keyboard triage shortcuts allow operators to confirm, reclassify, or draw missed targets with sub-meter spatial accuracy.',
@@ -39,7 +39,7 @@ const SCREENS = [
     id: 'preprocessing-pipeline',
     title: 'Explainable Acoustic Preprocessing Inspector',
     badge: 'ACOUSTIC NORMALIZATION',
-    url: 'aquascan.niot.gov.in/app/pipeline',
+    url: 'aquascan.app/pipeline',
     image: '/landing/pipeline.jpg',
     description:
       'Inspect stage-by-stage transformations on raw sonar data: along-track gain normalization, CLAHE contrast expansion, and acoustic shadow segmentation to understand exactly why a contact was flagged.',
@@ -69,7 +69,7 @@ export default function PlatformShowcase() {
           <Reveal className="lg:col-span-6">
             <Eyebrow index="03">Platform Interface</Eyebrow>
             <h2 className="mt-4 font-sans text-3xl font-semibold leading-tight tracking-tight text-fg sm:text-4xl">
-              Engineered for Hydrographers & Marine Scientists.
+              Engineered for Survey Teams & Marine Scientists.
             </h2>
           </Reveal>
           <Reveal delay={100} className="lg:col-span-6">
@@ -120,11 +120,6 @@ export default function PlatformShowcase() {
                 </svg>
                 <span className="text-cyan-glow">https://</span>
                 <span className="text-fg">{current.url}</span>
-              </div>
-
-              <div className="hidden md:flex items-center gap-2 font-mono text-[10.5px] text-emerald-500">
-                <span className="size-1.5 rounded-full bg-emerald-500 animate-ping" />
-                <span>ONLINE · AUV LINKED</span>
               </div>
             </div>
 
