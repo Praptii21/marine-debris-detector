@@ -18,3 +18,8 @@ backend/annotations/labels/*
 !backend/annotations/labels/.gitkeep
 backend/annotations/rejected.jsonl
 backend/app.py
+
+# Python & Testing artifacts
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
