@@ -152,31 +152,75 @@ function drawDetection(canvas, rgba, w, h, box, label) {
   }
 }
 
-function drawAcoustic(canvas, rgba, w, h, box, dir) {
+// A target's acoustic shadow corridor, extended 1.6x the box's own extent
+// on whichever side `dir` names. Shared by the real direction detector below
+// and the renderer, so what gets measured and what gets drawn can't diverge.
+function shadowCorridorRect(box, w, h, dir) {
+  const { x1, y1, x2, y2 } = box
+  const bw = x2 - x1
+  const bh = y2 - y1
+  if (dir === 'right') return { sx1: x2, sy1: y1, sx2: Math.min(w, x2 + Math.round(bw * 1.6)), sy2: y2 }
+  if (dir === 'left') return { sx1: Math.max(0, x1 - Math.round(bw * 1.6)), sy1: y1, sx2: x1, sy2: y2 }
+  if (dir === 'down') return { sx1: x1, sy1: y2, sx2: x2, sy2: Math.min(h, y2 + Math.round(bh * 1.6)) }
+  return { sx1: x1, sy1: Math.max(0, y1 - Math.round(bh * 1.6)), sx2: x2, sy2: y1 } // 'up'
+}
+
+function meanIntensity(gray, w, rect) {
+  const { sx1, sy1, sx2, sy2 } = rect
+  let sum = 0
+  let n = 0
+  for (let y = sy1; y < sy2; y++) {
+    for (let x = sx1; x < sx2; x++) {
+      sum += gray[y * w + x]
+      n++
+    }
+  }
+  return n > 0 ? sum / n : 255 // an empty/degenerate corridor reads as bright, so it's never picked
+}
+
+// Real acoustic-shadow direction, computed from the actual uploaded image —
+// not a label on the detection (no such field exists anywhere in this app;
+// previously this always silently fell back to a hardcoded 'right').
+// Side-scan sonar renders a target as a bright return with a dark corridor
+// directly behind it, on the side the beam can't reach past — so the real
+// shadow direction is whichever of the four candidate corridors around the
+// box is measurably darker than the rest, not a guess.
+function detectShadowDirection(gray, w, h, box) {
+  const boxMean = meanIntensity(gray, w, { sx1: box.x1, sy1: box.y1, sx2: box.x2, sy2: box.y2 })
+  let dir = 'right'
+  let bestMean = Infinity
+  for (const d of ['right', 'left', 'down', 'up']) {
+    const mean = meanIntensity(gray, w, shadowCorridorRect(box, w, h, d))
+    if (mean < bestMean) {
+      bestMean = mean
+      dir = d
+    }
+  }
+  // Contrast between the bright target return and the darkest adjacent
+  // corridor — low contrast means no corridor actually reads as a shadow,
+  // just normal seabed texture, and the direction shouldn't be asserted
+  // with confidence.
+  const contrast = Math.max(0, boxMean - bestMean)
+  return { dir, weak: contrast < 12 }
+}
+
+function drawAcoustic(canvas, rgba, w, h, box, dir, weak) {
   if (!canvas) return
   putRGBA(canvas, rgba, w, h)
   if (!box) return
   const ctx = canvas.getContext('2d')
   const { x1, y1, x2, y2 } = box
-  let sx1, sy1, sx2, sy2
-  if (dir === 'right') {
-    sx1 = x2; sx2 = Math.min(w, x2 + Math.round((x2 - x1) * 1.6)); sy1 = y1; sy2 = y2
-  } else if (dir === 'left') {
-    sx1 = Math.max(0, x1 - Math.round((x2 - x1) * 1.6)); sx2 = x1; sy1 = y1; sy2 = y2
-  } else if (dir === 'down') {
-    sx1 = x1; sx2 = x2; sy1 = y2; sy2 = Math.min(h, y2 + Math.round((y2 - y1) * 1.6))
-  } else {
-    sx1 = x1; sx2 = x2; sy1 = Math.max(0, y1 - Math.round((y2 - y1) * 1.6)); sy2 = y1
-  }
+  const { sx1, sy1, sx2, sy2 } = shadowCorridorRect(box, w, h, dir)
 
-  // Shadow corridor
+  // Shadow corridor — dimmer when the measurement came back weak, so a
+  // low-confidence guess doesn't read as visually certain as a real one.
   ctx.save()
-  ctx.globalAlpha = 0.35
+  ctx.globalAlpha = weak ? 0.15 : 0.35
   ctx.fillStyle = '#0055dd'
   ctx.fillRect(sx1, sy1, sx2 - sx1, sy2 - sy1)
   ctx.restore()
 
-  ctx.strokeStyle = 'rgba(0,180,255,0.85)'
+  ctx.strokeStyle = weak ? 'rgba(0,180,255,0.4)' : 'rgba(0,180,255,0.85)'
   ctx.lineWidth = 1.5
   ctx.strokeRect(sx1, sy1, sx2 - sx1, sy2 - sy1)
 
@@ -187,11 +231,14 @@ function drawAcoustic(canvas, rgba, w, h, box, dir) {
 
   // Acoustic axis arrow
   const cy = (y1 + y2) / 2
+  const cx = (x1 + x2) / 2
   ctx.strokeStyle = '#ffd700'
   ctx.lineWidth = 2.5
   ctx.beginPath()
   if (dir === 'right') { ctx.moveTo(x2, cy); ctx.lineTo(sx2, cy) }
   else if (dir === 'left') { ctx.moveTo(x1, cy); ctx.lineTo(sx1, cy) }
+  else if (dir === 'down') { ctx.moveTo(cx, y2); ctx.lineTo(cx, sy2) }
+  else { ctx.moveTo(cx, y1); ctx.lineTo(cx, sy1) }
   ctx.stroke()
 
   ctx.fillStyle = '#ffd700'
@@ -200,11 +247,18 @@ function drawAcoustic(canvas, rgba, w, h, box, dir) {
     ctx.moveTo(sx2, cy); ctx.lineTo(sx2 - 10, cy - 6); ctx.lineTo(sx2 - 10, cy + 6)
   } else if (dir === 'left') {
     ctx.moveTo(sx1, cy); ctx.lineTo(sx1 + 10, cy - 6); ctx.lineTo(sx1 + 10, cy + 6)
+  } else if (dir === 'down') {
+    ctx.moveTo(cx, sy2); ctx.lineTo(cx - 6, sy2 - 10); ctx.lineTo(cx + 6, sy2 - 10)
+  } else {
+    ctx.moveTo(cx, sy1); ctx.lineTo(cx - 6, sy1 + 10); ctx.lineTo(cx + 6, sy1 + 10)
   }
   ctx.fill()
 
-  // High contrast text box / badge for shadow direction (avoid unreadable blue text)
-  const shadowText = `SHADOW: ${dir.toUpperCase()}`
+  // High contrast text box / badge for shadow direction (avoid unreadable blue text).
+  // "WEAK" when no corridor around the box was actually measurably darker
+  // than the target return — i.e. don't assert a confident direction when
+  // the image doesn't show one.
+  const shadowText = weak ? 'SHADOW: WEAK' : `SHADOW: ${dir.toUpperCase()}`
   ctx.font = 'bold 11px IBM Plex Mono, monospace'
   const stw = ctx.measureText(shadowText).width
   const badgeX = Math.max(4, Math.min(w - stw - 16, sx1))
@@ -325,8 +379,8 @@ const STAGE_INFO = [
   },
   {
     title: 'Acoustic Shadow Detection',
-    body: 'The acoustic context post-processor looks for a shadow corridor adjacent to the YOLO box. The shadow region (blue fill) is 1.6x the bounding box dimension in the inferred direction. A gold arrow marks the acoustic axis.',
-    params: [['Shadow', '1.6x bbox extent'], ['Target', 'Cyan outline'], ['Axis', 'Gold arrow']],
+    body: 'Samples mean pixel brightness in a 1.6x-bbox corridor on each of the four sides of the YOLO box and picks whichever is measurably darkest — a real target casts a dark corridor on the side the beam can’t reach past. Shown as "SHADOW: WEAK" instead of a direction when no side is meaningfully darker than the target return.',
+    params: [['Shadow', '1.6x bbox extent, darkest of 4 sides'], ['Target', 'Cyan outline'], ['Axis', 'Gold arrow']],
   },
 ]
 
@@ -444,10 +498,12 @@ export default function PipelineVisualizer({ imageSrc, detections }) {
         }
 
         const confLabel = top ? `${top.class || 'Target'} ${(top.confidence || 0).toFixed(2)}` : ''
-        const dir = (top && top.shadow_direction) ? top.shadow_direction : 'right'
+        // Real shadow direction from the actual pixel data (see
+        // detectShadowDirection above) — not a hardcoded guess.
+        const { dir, weak } = box ? detectShadowDirection(g, dW, dH, box) : { dir: 'right', weak: true }
 
         if (cDet.current) drawDetection(cDet.current, applyLUT(enh, dW, dH).slice(), dW, dH, box, confLabel)
-        if (cAc.current) drawAcoustic(cAc.current, applyLUT(enh, dW, dH).slice(), dW, dH, box, dir)
+        if (cAc.current) drawAcoustic(cAc.current, applyLUT(enh, dW, dH).slice(), dW, dH, box, dir, weak)
 
         setReady(true)
       } catch (err) {
