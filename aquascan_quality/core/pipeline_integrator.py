@@ -162,6 +162,23 @@ class PipelineIntegrator:
 
         return calibrated
 
+    def run_audited_inference(
+        self,
+        image_input: Union[np.ndarray, str, Path],
+        tile_id: Optional[str] = None,
+        timestamp: Optional[str] = None,
+        model: Any = None,
+        synthetic_detections: Optional[List[Dict[str, Any]]] = None,
+    ) -> Dict[str, Any]:
+        """Alias for process_image for API integration compatibility."""
+        return self.process_image(
+            image_input=image_input,
+            tile_id=tile_id,
+            timestamp=timestamp,
+            model=model,
+            synthetic_detections=synthetic_detections,
+        )
+
     def process_image(
         self,
         image_input: Union[np.ndarray, str, Path],

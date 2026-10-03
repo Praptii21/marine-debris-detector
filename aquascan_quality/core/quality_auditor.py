@@ -118,21 +118,19 @@ class AcousticQualityAuditor:
 
         # Convert multidimensional arrays to 2D grayscale
         if img.ndim == 2:
-            gray = img
+            return img
         elif img.ndim == 3:
             channels = img.shape[2]
             if channels == 1:
-                gray = img[:, :, 0]
+                return img[:, :, 0]
             elif channels == 3:
-                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             elif channels == 4:
-                gray = cv2.cvtColor(img, cv2.COLOR_BGRA2GRAY)
+                return cv2.cvtColor(img, cv2.COLOR_BGRA2GRAY)
             else:
                 raise ValueError(f"Unexpected number of channels: {channels}")
         else:
             raise ValueError(f"Image array must be 2D or 3D, got ndim={img.ndim}")
-
-        return gray.astype(np.float32)
 
     def _check_saturation(self, image: np.ndarray) -> Tuple[float, float, List[str]]:
         """Acoustic Saturation & Specular Clipping Assessment.
@@ -228,6 +226,10 @@ class AcousticQualityAuditor:
             penalty = self.dr_penalty_weight
 
         return dyn_range, penalty, flags
+
+    def audit_tile(self, image_input: Union[np.ndarray, str, Path]) -> Dict[str, Any]:
+        """Alias for audit(...) for API integration compatibility."""
+        return self.audit(image_input)
 
     def audit(self, image_input: Union[np.ndarray, str, Path]) -> Dict[str, Any]:
         """Perform non-destructive in-stride quality audit over a sonar image tile.

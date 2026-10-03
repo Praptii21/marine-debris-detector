@@ -37,7 +37,23 @@ from pydantic import BaseModel, Field
 
 from georef import SonarGeometry, VesselNav, georeference_yolo_bbox
 
+import sys
+import numpy as np
+
 BASE_DIR = Path(__file__).resolve().parent
+
+# Ensure aquascan_quality module is accessible
+if str(BASE_DIR.parent) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR.parent))
+if str(BASE_DIR.parent / "aquascan_quality") not in sys.path:
+    sys.path.insert(0, str(BASE_DIR.parent / "aquascan_quality"))
+
+from aquascan_quality.core.quality_auditor import AcousticQualityAuditor
+from aquascan_quality.core.pipeline_integrator import PipelineIntegrator
+
+quality_auditor = AcousticQualityAuditor()
+pipeline_integrator = PipelineIntegrator(auditor=quality_auditor)
+
 MODELS_DIR = BASE_DIR / "models"
 ANNOTATIONS_DIR = BASE_DIR / "annotations"
 IMAGES_DIR = ANNOTATIONS_DIR / "images"
@@ -277,6 +293,11 @@ async def detect(file: UploadFile = File(...), metadata: Optional[str] = Form(No
     kept = _nms(pooled)
     elapsed_ms = round((time.perf_counter() - start) * 1000, 1)
 
+    # In-stride acoustic data quality audit (pure pixel-domain)
+    img_np = np.array(image)
+    quality = quality_auditor.audit_tile(img_np)
+    is_low_quality = quality.get("status") != "PASS"
+
     image_id = str(uuid.uuid4())
     detections = []
     for det in kept:
@@ -284,7 +305,8 @@ async def detect(file: UploadFile = File(...), metadata: Optional[str] = Form(No
         lat = lon = None
         if nav is not None:
             lat, lon = georeference_yolo_bbox([x1, y1, x2, y2], width, height, nav, geometry)
-        detections.append({
+        
+        det_data = {
             "id": f"det_{uuid.uuid4().hex[:12]}",
             "class": det["class"],
             "confidence": round(det["confidence"], 4),
@@ -298,7 +320,11 @@ async def detect(file: UploadFile = File(...), metadata: Optional[str] = Form(No
             },
             "lat": lat,
             "lon": lon,
-        })
+            "quality_warning": is_low_quality,
+        }
+        if is_low_quality:
+            det_data["quality_note"] = "low data quality"
+        detections.append(det_data)
 
     # Cache the raw bytes so a later POST /annotations can archive the
     # source image without the client having to re-upload it.
@@ -313,6 +339,7 @@ async def detect(file: UploadFile = File(...), metadata: Optional[str] = Form(No
     return {
         "image_id": image_id,
         "detections": detections,
+        "quality": quality,
         "processing_time_ms": elapsed_ms,
     }
 
