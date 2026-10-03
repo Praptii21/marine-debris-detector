@@ -1,5 +1,17 @@
 # AquaScan — Marine Debris & Hazard Detection
 
+![SIH 2026](https://img.shields.io/badge/Smart%20India%20Hackathon-2026-orange)
+![Problem Statement](https://img.shields.io/badge/PS-SIH26057-blue)
+![Ministry](https://img.shields.io/badge/MoES%20%2F%20NIOT-Oceanography-0a7ea4)
+![React](https://img.shields.io/badge/React-18-61dafb?logo=react&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646cff?logo=vite&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3776ab?logo=python&logoColor=white)
+![YOLO](https://img.shields.io/badge/YOLO-Ultralytics-00ffff)
+![PostgreSQL](https://img.shields.io/badge/Postgres-Neon-336791?logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ed?logo=docker&logoColor=white)
+![Leaflet](https://img.shields.io/badge/Leaflet-199900?logo=leaflet&logoColor=white)
+
 Automated detection of marine debris and hazards (ghost nets, crab pots, shipwrecks, mines) in side-scan
 sonar imagery. A unified YOLO detection model runs server-side, every detection is georeferenced from the
 vessel's nav fix, and operator corrections feed back into a Postgres-backed active-learning loop.
@@ -7,13 +19,62 @@ vessel's nav fix, and operator corrections feed back into a Postgres-backed acti
 Built for **Smart India Hackathon 2026**, problem statement **SIH26057** (Ministry of Earth Sciences /
 NIOT), by **Team Aquanauts**, Ramaiah Institute of Technology.
 
-**Live:**
-- Frontend — https://marine-debris-detector-t79s.vercel.app
-- Backend API — https://marine-debris-detector-production.up.railway.app (`/health` for status)
+### 🌊 [View it live → marine-debris-detector-t79s.vercel.app](https://marine-debris-detector-t79s.vercel.app)
 
 ![Landing page](docs/screenshots/landing-hero.jpg)
 
 ![Detection pipeline walkthrough on the landing page](docs/screenshots/landing-pipeline.jpg)
+
+## Problem statement
+
+**SIH26057 — Ministry of Earth Sciences / NIOT.** Side-scan sonar surveys of the seabed generate large
+volumes of imagery that must be inspected manually to find hazards and marine debris: derelict fishing gear
+and ghost nets, wrecks, and mine-like objects. Manual review is slow, expert-dependent and hard to scale,
+and the findings are rarely turned into georeferenced, actionable outputs.
+
+**Our approach:** automatically detect and classify seafloor objects in sonar imagery, georeference each
+contact, triage by confidence so experts focus on ambiguous cases, and capture their corrections to keep
+improving the model.
+
+## Tech stack
+
+| Layer | Technologies |
+|---|---|
+| Frontend | React 18, Vite, React Router, Leaflet / react-leaflet, jsPDF + html2canvas, Tailwind (landing only) + CSS variables theme |
+| Backend | Python, FastAPI, Uvicorn |
+| ML / CV | Ultralytics YOLO (YOLO26n deployed), PIL, OpenCV |
+| Geospatial | pyproj (UTM ⇄ WGS84), Leaflet, KML export |
+| Database | PostgreSQL on Neon (psycopg2, pooled) |
+| Deployment | Vercel (frontend), Railway + Docker (backend), Neon (DB) |
+
+## Tech architecture
+
+```mermaid
+flowchart LR
+    subgraph Client["Browser - React + Vite (Vercel)"]
+        UP[Upload] --> RV[Review + annotation]
+        RV --> MP[Map + risk layer]
+        RV --> RP[Reports: CSV / JSON / PDF / KML]
+        PV[Live preprocessing visualiser]
+    end
+    subgraph Server["FastAPI (Railway, Docker)"]
+        DET["/detect"] --> YOLO[YOLO inference + NMS]
+        YOLO --> GEO[Georeferencing - pyproj]
+        EXP["/annotations/export"]
+    end
+    subgraph Data["Neon Postgres"]
+        A[(annotations)]
+        R[(rejected_annotations)]
+        I[(annotation_images)]
+        E[(events)]
+    end
+    UP -->|image + nav fix| DET
+    GEO -->|detections + lat/lon| RV
+    RV -->|save confirms / rejects| Data
+    Data --> EXP
+    EXP -->|YOLO-format zip| TR[Retraining]
+    TR -.->|new weights| YOLO
+```
 
 ## What's actually real here
 
