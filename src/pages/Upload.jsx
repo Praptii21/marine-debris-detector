@@ -1,6 +1,8 @@
 import { useCallback, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { runDetectionPipeline, extractSonarMetadata } from '../api/client.js'
+import InfoNotice from '../components/InfoNotice.jsx'
+import { HOSTED_DEMO_NOTE_PREFIX, DETECT_LOADING_TEXT, MOCK_NAV_DATA_NOTICE } from '../constants/demoNotices.js'
 
 const ACCEPTED = '.xtf,.jsf,.segy,.tif,.tiff,.png,.jpg,.jpeg'
 
@@ -487,9 +489,26 @@ export default function Upload() {
           {files.length > 0 && selectedMeta && (
             <div className="card">
               <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
-                <h3 style={{ fontSize: 16 }}>Survey metadata</h3>
+                <h3 style={{ fontSize: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span>Survey metadata</span>
+                  <span
+                    style={{
+                      fontSize: 10.5,
+                      fontFamily: 'var(--font-mono)',
+                      fontWeight: 600,
+                      letterSpacing: '.04em',
+                      textTransform: 'uppercase',
+                      color: 'var(--amber)',
+                      background: 'var(--amber-tint)',
+                      padding: '2px 7px',
+                      borderRadius: 10,
+                    }}
+                  >
+                    Simulated
+                  </span>
+                </h3>
                 <p style={{ marginTop: 4, fontSize: 11.5, color: 'var(--ink-faint)' }}>
-                  Auto-filled from sonar file headers (XTF/JSF). Manual entry for image-only uploads.
+                  {MOCK_NAV_DATA_NOTICE}
                 </p>
               </div>
               <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -536,13 +555,38 @@ export default function Upload() {
           )}
 
           <button type="submit" className="btn block" style={{ marginTop: 16, padding: 13 }} disabled={!canSubmit}>
-            {submitting ? 'Running detection pipeline…' : 'Run detection pipeline →'}
+            {submitting ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <span
+                  style={{
+                    width: 13,
+                    height: 13,
+                    borderRadius: '50%',
+                    border: '2px solid rgba(255,255,255,0.4)',
+                    borderTopColor: '#fff',
+                    animation: 'aquascan-spin 0.7s linear infinite',
+                  }}
+                />
+                {DETECT_LOADING_TEXT}
+              </span>
+            ) : (
+              'Run detection pipeline →'
+            )}
           </button>
+          <style>{'@keyframes aquascan-spin { to { transform: rotate(360deg); } }'}</style>
           {result && (
             <div style={{ marginTop: 12, fontSize: 12.5, color: 'var(--sage)' }}>
               Queued {result.queued} file{result.queued === 1 ? '' : 's'} as line {result.lineId} · opening review…
             </div>
           )}
+
+          <InfoNotice style={{ marginTop: 16 }}>
+            {HOSTED_DEMO_NOTE_PREFIX}{' '}
+            <Link to="/review" style={{ color: 'var(--ocean)', fontWeight: 600 }}>
+              Review
+            </Link>
+            .
+          </InfoNotice>
         </div>
       </form>
     </div>

@@ -6,6 +6,7 @@ import ConfidenceBadge from '../components/ConfidenceBadge.jsx'
 import PipelineVisualizer from '../components/PipelineVisualizer.jsx'
 import SonarCanvas from '../components/SonarCanvas.jsx'
 import { classIdFor, classLabel, isCriticalClass, modelLabel, statusRowTint } from '../utils/taxonomy.js'
+import { isCachedLineId } from '../constants/demoNotices.js'
 
 function detectionVariant(status, classKey) {
   // A safety-critical class (person in water) always renders distinctly,
@@ -253,6 +254,25 @@ export default function Review() {
                 behind an object on the seafloor.
               </span>
             </span>
+            {isCachedLineId(lineId) && (
+              <span
+                className="mono"
+                title="Pre-computed demo result, not run live for this visit"
+                style={{
+                  fontSize: 10.5,
+                  fontWeight: 600,
+                  letterSpacing: '.04em',
+                  textTransform: 'uppercase',
+                  color: 'var(--ink-dim)',
+                  background: 'var(--panel-alt)',
+                  border: '1px solid var(--border)',
+                  padding: '2px 8px',
+                  borderRadius: 10,
+                }}
+              >
+                Cached result
+              </span>
+            )}
           </div>
 
           {lines.length > 0 && (
