@@ -250,3 +250,13 @@ export async function getHealth() {
   }
   return res.json()
 }
+
+// Data-driven risk zones (GeoJSON), computed server-side from surveyed
+// detections per km^2. `hazard` is all | navigation | ecological.
+export async function getRiskZones(hazard = 'all') {
+  const res = await fetch(`${BASE_URL}/risk-zones?hazard=${encodeURIComponent(hazard)}`)
+  if (!res.ok) {
+    throw new Error(`Failed to fetch risk zones: ${res.status} ${res.statusText}`)
+  }
+  return res.json()
+}
