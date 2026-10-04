@@ -1,0 +1,104 @@
+{
+  "image_id": "demo-sss-debris9-nice",
+  "filename": "sss-debris9-nice.jpg",
+  "detections": [
+    {
+      "id": "det_794fdbec6e3a",
+      "class": "shipwreck",
+      "class_name": "shipwreck",
+      "confidence": 0.8455,
+      "model": "shipwreck_ship-model",
+      "bbox_px": [
+        425.0,
+        259.5,
+        543.5,
+        354.6
+      ],
+      "bbox_pct": {
+        "top": 0.54291,
+        "left": 0.60708,
+        "width": 0.16939,
+        "height": 0.19895
+      },
+      "lat": 13.0827122,
+      "lon": 80.2705239,
+      "quality_warning": false,
+      "quality_note": null
+    },
+    {
+      "id": "det_75cf45a9cd02",
+      "class": "mine",
+      "class_name": "mine",
+      "confidence": 0.5016,
+      "model": "mine_mine-model",
+      "bbox_px": [
+        27.9,
+        147.4,
+        53.1,
+        167.9
+      ],
+      "bbox_pct": {
+        "top": 0.30834,
+        "left": 0.03985,
+        "width": 0.03595,
+        "height": 0.04281
+      },
+      "lat": 13.0826718,
+      "lon": 80.2711075,
+      "quality_warning": false,
+      "quality_note": null
+    },
+    {
+      "id": "det_4a83674c6747",
+      "class": "shipwreck",
+      "class_name": "shipwreck",
+      "confidence": 0.2997,
+      "model": "shipwreck_ship-model",
+      "bbox_px": [
+        75.5,
+        34.3,
+        310.1,
+        177.7
+      ],
+      "bbox_pct": {
+        "top": 0.07177,
+        "left": 0.10789,
+        "width": 0.33505,
+        "height": 0.29993
+      },
+      "lat": 13.0826856,
+      "lon": 80.2709077,
+      "quality_warning": false,
+      "quality_note": null
+    }
+  ],
+  "quality": {
+    "score": 1.0,
+    "status": "PASS",
+    "source": "image",
+    "flags": [],
+    "metrics": {
+      "saturation_ratio": 0.0014,
+      "dropout_row_count": 0,
+      "dynamic_range": 85.0
+    },
+    "config_hash": "69b82705761bb177e52becc9c3d9f636"
+  },
+  "processing_time_ms": 14.2,
+  "depth": 38.4,
+  "depth_m": 38.4,
+  "altitude": 8.5,
+  "altitude_m": 8.5,
+  "heading": 184.2,
+  "heading_deg": 184.2,
+  "coords": "13.0827, 80.2707",
+  "start_coords": "13.0827, 80.2707",
+  "end_coords": "13.0855, 80.2735",
+  "start_lat": 13.0827,
+  "start_lon": 80.2707,
+  "end_lat": 13.0855,
+  "end_lon": 80.2735,
+  "vessel": "AUV Explorer-4 (NIOT Hydrographic)",
+  "survey_id": "SRV-SAMPLE-SAMPLE-NET-1",
+  "swath_width_m": 100.0
+}

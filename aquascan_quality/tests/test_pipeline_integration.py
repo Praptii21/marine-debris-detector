@@ -176,3 +176,39 @@ def test_ultralytics_mock_inference(integrator: PipelineIntegrator) -> None:
     assert det["confidence"] == 0.8842
     assert det["bbox_normalized"] == [0.4512, 0.5231, 0.2215, 0.1542]
     assert len(det["detection_id"]) == 8
+
+
+def test_edge_replay_cache_contract() -> None:
+    """Verify that all precomputed demo cache JSONs adhere to the edge-replay schema contract."""
+    import json
+    demo_cache_dir = Path(__file__).resolve().parent.parent.parent / "backend" / "demo_cache"
+    assert demo_cache_dir.is_dir(), f"demo_cache dir not found at {demo_cache_dir}"
+
+    cache_files = list(demo_cache_dir.glob("*.json"))
+    assert len(cache_files) >= 6, "Expected at least 6 gallery preset cache files"
+
+    for cache_file in cache_files:
+        with open(cache_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        assert "image_id" in data, f"Missing image_id in {cache_file.name}"
+        assert "detections" in data and isinstance(data["detections"], list)
+        assert "quality" in data and isinstance(data["quality"], dict)
+        assert "processing_time_ms" in data
+
+        # Quality block schema
+        q = data["quality"]
+        assert q.get("status") in ("PASS", "WARNING", "DEGRADED")
+        assert "score" in q
+        assert "metrics" in q
+        assert "config_hash" in q
+
+        # Detections schema
+        for d in data["detections"]:
+            assert "id" in d
+            assert "class" in d or "class_name" in d
+            assert "confidence" in d
+            assert "bbox_px" in d
+            assert "bbox_pct" in d
+            assert "quality_warning" in d
+

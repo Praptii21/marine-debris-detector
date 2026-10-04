@@ -1,0 +1,81 @@
+{
+  "image_id": "demo-sss2",
+  "filename": "sss2.jpg",
+  "detections": [
+    {
+      "id": "det_56432fa4fc6b",
+      "class": "shipwreck",
+      "class_name": "shipwreck",
+      "confidence": 0.4891,
+      "model": "shipwreck_ship-model",
+      "bbox_px": [
+        422.7,
+        255.2,
+        494.7,
+        374.2
+      ],
+      "bbox_pct": {
+        "top": 0.58808,
+        "left": 0.79163,
+        "width": 0.1347,
+        "height": 0.27412
+      },
+      "lat": 12.8696878,
+      "lon": 80.3800861,
+      "quality_warning": false,
+      "quality_note": null
+    },
+    {
+      "id": "det_4ab623581fd3",
+      "class": "mine",
+      "class_name": "mine",
+      "confidence": 0.4295,
+      "model": "shipwreck_ship-model",
+      "bbox_px": [
+        104.6,
+        146.3,
+        204.7,
+        359.7
+      ],
+      "bbox_pct": {
+        "top": 0.33707,
+        "left": 0.19593,
+        "width": 0.18746,
+        "height": 0.49172
+      },
+      "lat": 12.8701847,
+      "lon": 80.3799491,
+      "quality_warning": false,
+      "quality_note": null
+    }
+  ],
+  "quality": {
+    "score": 1.0,
+    "status": "PASS",
+    "source": "image",
+    "flags": [],
+    "metrics": {
+      "saturation_ratio": 0.0,
+      "dropout_row_count": 0,
+      "dynamic_range": 84.0
+    },
+    "config_hash": "69b82705761bb177e52becc9c3d9f636"
+  },
+  "processing_time_ms": 14.2,
+  "depth": 32.0,
+  "depth_m": 32.0,
+  "altitude": 8.5,
+  "altitude_m": 8.5,
+  "heading": 75.0,
+  "heading_deg": 75.0,
+  "coords": "12.8700, 80.3800",
+  "start_coords": "12.8700, 80.3800",
+  "end_coords": null,
+  "start_lat": 12.87,
+  "start_lon": 80.38,
+  "end_lat": null,
+  "end_lon": null,
+  "vessel": "RV Sagar Sandhan",
+  "survey_id": "SRV-SAMPLE-SSS2",
+  "swath_width_m": 100.0
+}

@@ -1,0 +1,127 @@
+{
+  "image_id": "demo-sss1",
+  "filename": "sss1.jpg",
+  "detections": [
+    {
+      "id": "det_cd9f10b6751f",
+      "class": "non_mine_object",
+      "class_name": "non_mine_object",
+      "confidence": 0.5215,
+      "model": "mine_mine-model",
+      "bbox_px": [
+        378.8,
+        143.9,
+        409.1,
+        182.4
+      ],
+      "bbox_pct": {
+        "top": 0.39424,
+        "left": 0.54114,
+        "width": 0.04325,
+        "height": 0.10552
+      },
+      "lat": 12.891152,
+      "lon": 80.3924284,
+      "quality_warning": false,
+      "quality_note": null
+    },
+    {
+      "id": "det_c2421340f234",
+      "class": "non_mine_object",
+      "class_name": "non_mine_object",
+      "confidence": 0.4919,
+      "model": "mine_mine-model",
+      "bbox_px": [
+        447.9,
+        93.6,
+        476.2,
+        133.3
+      ],
+      "bbox_pct": {
+        "top": 0.25633,
+        "left": 0.63984,
+        "width": 0.04038,
+        "height": 0.10886
+      },
+      "lat": 12.8910749,
+      "lon": 80.392474,
+      "quality_warning": false,
+      "quality_note": null
+    },
+    {
+      "id": "det_ffaca471e366",
+      "class": "shipwreck",
+      "class_name": "shipwreck",
+      "confidence": 0.4884,
+      "model": "shipwreck_ship-model",
+      "bbox_px": [
+        67.6,
+        28.7,
+        167.7,
+        152.0
+      ],
+      "bbox_pct": {
+        "top": 0.07859,
+        "left": 0.09656,
+        "width": 0.14298,
+        "height": 0.33797
+      },
+      "lat": 12.8914603,
+      "lon": 80.392246,
+      "quality_warning": false,
+      "quality_note": null
+    },
+    {
+      "id": "det_1c3d7cb852de",
+      "class": "shipwreck",
+      "class_name": "shipwreck",
+      "confidence": 0.3182,
+      "model": "shipwreck_ship-model",
+      "bbox_px": [
+        388.1,
+        76.9,
+        428.2,
+        143.1
+      ],
+      "bbox_pct": {
+        "top": 0.21077,
+        "left": 0.55444,
+        "width": 0.05731,
+        "height": 0.18122
+      },
+      "lat": 12.8911352,
+      "lon": 80.3924383,
+      "quality_warning": false,
+      "quality_note": null
+    }
+  ],
+  "quality": {
+    "score": 1.0,
+    "status": "PASS",
+    "source": "image",
+    "flags": [],
+    "metrics": {
+      "saturation_ratio": 0.0014,
+      "dropout_row_count": 0,
+      "dynamic_range": 106.0
+    },
+    "config_hash": "69b82705761bb177e52becc9c3d9f636"
+  },
+  "processing_time_ms": 14.2,
+  "depth": 35.0,
+  "depth_m": 35.0,
+  "altitude": 8.5,
+  "altitude_m": 8.5,
+  "heading": 60.0,
+  "heading_deg": 60.0,
+  "coords": "12.8912, 80.3924",
+  "start_coords": "12.8912, 80.3924",
+  "end_coords": null,
+  "start_lat": 12.8912,
+  "start_lon": 80.3924,
+  "end_lat": null,
+  "end_lon": null,
+  "vessel": "RV Sagar Sandhan",
+  "survey_id": "SRV-SAMPLE-SSS1",
+  "swath_width_m": 100.0
+}

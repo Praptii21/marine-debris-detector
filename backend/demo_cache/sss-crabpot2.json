@@ -1,0 +1,81 @@
+{
+  "image_id": "demo-sss-crabpot2",
+  "filename": "sss-crabpot2.jpg",
+  "detections": [
+    {
+      "id": "det_b620f0a31222",
+      "class": "crab_pot",
+      "class_name": "crab_pot",
+      "confidence": 0.4691,
+      "model": "crab_pot_yolo26s",
+      "bbox_px": [
+        155.8,
+        155.6,
+        220.0,
+        237.9
+      ],
+      "bbox_pct": {
+        "top": 0.24306,
+        "left": 0.24346,
+        "width": 0.10025,
+        "height": 0.12872
+      },
+      "lat": 13.0796132,
+      "lon": 80.2688206,
+      "quality_warning": false,
+      "quality_note": null
+    },
+    {
+      "id": "det_7d5e96945bb0",
+      "class": "crab_pot",
+      "class_name": "crab_pot",
+      "confidence": 0.2934,
+      "model": "crab_pot_yolo26s",
+      "bbox_px": [
+        594.9,
+        431.4,
+        639.8,
+        489.6
+      ],
+      "bbox_pct": {
+        "top": 0.67405,
+        "left": 0.9296,
+        "width": 0.07007,
+        "height": 0.09099
+      },
+      "lat": 13.0802172,
+      "lon": 80.268754,
+      "quality_warning": false,
+      "quality_note": null
+    }
+  ],
+  "quality": {
+    "score": 1.0,
+    "status": "PASS",
+    "source": "image",
+    "flags": [],
+    "metrics": {
+      "saturation_ratio": 0.012,
+      "dropout_row_count": 0,
+      "dynamic_range": 114.0
+    },
+    "config_hash": "69b82705761bb177e52becc9c3d9f636"
+  },
+  "processing_time_ms": 14.2,
+  "depth": 18.6,
+  "depth_m": 18.6,
+  "altitude": 8.5,
+  "altitude_m": 8.5,
+  "heading": 264.0,
+  "heading_deg": 264.0,
+  "coords": "13.0798, 80.2688",
+  "start_coords": "13.0798, 80.2688",
+  "end_coords": "13.0810, 80.2670",
+  "start_lat": 13.0798,
+  "start_lon": 80.2688,
+  "end_lat": 13.081,
+  "end_lon": 80.267,
+  "vessel": "AUV Explorer-4 (NIOT Hydrographic)",
+  "survey_id": "SRV-SAMPLE-SAMPLE-CRABPOT-2",
+  "swath_width_m": 100.0
+}
