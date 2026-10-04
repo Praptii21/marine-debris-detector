@@ -10,6 +10,10 @@ export const HOSTED_DEMO_NOTE_PREFIX =
 export const DETECT_LOADING_TEXT =
   'Waking server and running model… this can take up to 1–2 minutes on the free tier.'
 
+export const DETECT_OFFLINE_NOTE_PREFIX =
+  "Couldn't reach the detection backend — it may still be waking up, or temporarily offline. In the " +
+  'meantime, you can see results from our model’s previous run in'
+
 export const MOCK_NAV_DATA_NOTICE =
   "Mock data: values here are simulated to demonstrate how the pipeline works. In real surveys, " +
   "navigation and attitude come from the sonar's XTF ping headers and nav logs."

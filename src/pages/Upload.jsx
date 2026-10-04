@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { runDetectionPipeline, extractSonarMetadata } from '../api/client.js'
 import InfoNotice from '../components/InfoNotice.jsx'
-import { HOSTED_DEMO_NOTE_PREFIX, DETECT_LOADING_TEXT, MOCK_NAV_DATA_NOTICE } from '../constants/demoNotices.js'
+import { HOSTED_DEMO_NOTE_PREFIX, DETECT_LOADING_TEXT, DETECT_OFFLINE_NOTE_PREFIX, MOCK_NAV_DATA_NOTICE } from '../constants/demoNotices.js'
 
 const ACCEPTED = '.xtf,.jsf,.segy,.tif,.tiff,.png,.jpg,.jpeg'
 
@@ -92,6 +92,7 @@ export default function Upload() {
   
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState(null)
+  const [submitError, setSubmitError] = useState(null)
 
   const processFileMetadata = async (fileObj, presetMeta = null) => {
     setFiles((prev) => prev.map(f => f.id === fileObj.id ? { ...f, metaStatus: 'extracting' } : f))
@@ -209,10 +210,13 @@ export default function Upload() {
     
     setSubmitting(true)
     setResult(null)
+    setSubmitError(null)
     try {
       const res = await runDetectionPipeline({ files, metadataByFile, metadata: {} })
       setResult(res)
       setTimeout(() => navigate(`/review/${res.lineId}`), 700)
+    } catch (err) {
+      setSubmitError(err.message || 'Detection request failed.')
     } finally {
       setSubmitting(false)
     }
@@ -578,6 +582,15 @@ export default function Upload() {
             <div style={{ marginTop: 12, fontSize: 12.5, color: 'var(--sage)' }}>
               Queued {result.queued} file{result.queued === 1 ? '' : 's'} as line {result.lineId} · opening review…
             </div>
+          )}
+          {submitError && (
+            <InfoNotice style={{ marginTop: 12, borderColor: 'var(--coral)', color: 'var(--coral)' }}>
+              {DETECT_OFFLINE_NOTE_PREFIX}{' '}
+              <Link to="/review" style={{ color: 'var(--coral)', fontWeight: 600 }}>
+                Review
+              </Link>
+              .
+            </InfoNotice>
           )}
 
           <InfoNotice style={{ marginTop: 16 }}>
