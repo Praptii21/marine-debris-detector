@@ -1,0 +1,34 @@
+{
+  "image_id": "demo-sss-mine4",
+  "filename": "sss-mine4.jpg",
+  "detections": [],
+  "quality": {
+    "score": 1.0,
+    "status": "PASS",
+    "source": "image",
+    "flags": [],
+    "metrics": {
+      "saturation_ratio": 0.0002,
+      "dropout_row_count": 0,
+      "dynamic_range": 166.0
+    },
+    "config_hash": "69b82705761bb177e52becc9c3d9f636"
+  },
+  "processing_time_ms": 14.2,
+  "depth": 47.5,
+  "depth_m": 47.5,
+  "altitude": 8.5,
+  "altitude_m": 8.5,
+  "heading": 312.0,
+  "heading_deg": 312.0,
+  "coords": "13.0802, 80.2680",
+  "start_coords": "13.0802, 80.2680",
+  "end_coords": "13.0820, 80.2660",
+  "start_lat": 13.0802,
+  "start_lon": 80.268,
+  "end_lat": 13.082,
+  "end_lon": 80.266,
+  "vessel": "AUV Explorer-4 (NIOT Hydrographic)",
+  "survey_id": "SRV-SAMPLE-SAMPLE-MINE-1",
+  "swath_width_m": 100.0
+}

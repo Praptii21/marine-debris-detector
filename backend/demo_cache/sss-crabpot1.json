@@ -1,0 +1,104 @@
+{
+  "image_id": "demo-sss-crabpot1",
+  "filename": "sss-crabpot1.jpg",
+  "detections": [
+    {
+      "id": "det_532ab1b3097a",
+      "class": "crab_pot",
+      "class_name": "crab_pot",
+      "confidence": 0.4898,
+      "model": "crab_pot_yolo26s",
+      "bbox_px": [
+        222.5,
+        71.8,
+        287.1,
+        157.1
+      ],
+      "bbox_pct": {
+        "top": 0.11219,
+        "left": 0.34759,
+        "width": 0.10099,
+        "height": 0.1332
+      },
+      "lat": 13.0815929,
+      "lon": 80.269108,
+      "quality_warning": false,
+      "quality_note": null
+    },
+    {
+      "id": "det_e7a351d1450d",
+      "class": "crab_pot",
+      "class_name": "crab_pot",
+      "confidence": 0.3993,
+      "model": "crab_pot_yolo26s",
+      "bbox_px": [
+        250.2,
+        300.6,
+        331.3,
+        373.5
+      ],
+      "bbox_pct": {
+        "top": 0.46975,
+        "left": 0.39091,
+        "width": 0.1268,
+        "height": 0.11379
+      },
+      "lat": 13.0815422,
+      "lon": 80.2691036,
+      "quality_warning": false,
+      "quality_note": null
+    },
+    {
+      "id": "det_ae0b362dd54e",
+      "class": "crab_pot",
+      "class_name": "crab_pot",
+      "confidence": 0.3938,
+      "model": "crab_pot_yolo26s",
+      "bbox_px": [
+        11.3,
+        99.6,
+        71.8,
+        166.8
+      ],
+      "bbox_pct": {
+        "top": 0.15565,
+        "left": 0.01769,
+        "width": 0.09453,
+        "height": 0.10494
+      },
+      "lat": 13.0818928,
+      "lon": 80.2691339,
+      "quality_warning": false,
+      "quality_note": null
+    }
+  ],
+  "quality": {
+    "score": 1.0,
+    "status": "PASS",
+    "source": "image",
+    "flags": [],
+    "metrics": {
+      "saturation_ratio": 0.0,
+      "dropout_row_count": 0,
+      "dynamic_range": 82.0
+    },
+    "config_hash": "69b82705761bb177e52becc9c3d9f636"
+  },
+  "processing_time_ms": 14.2,
+  "depth": 36.8,
+  "depth_m": 36.8,
+  "altitude": 8.5,
+  "altitude_m": 8.5,
+  "heading": 95.0,
+  "heading_deg": 95.0,
+  "coords": "13.0815, 80.2691",
+  "start_coords": "13.0815, 80.2691",
+  "end_coords": "13.0830, 80.2710",
+  "start_lat": 13.0815,
+  "start_lon": 80.2691,
+  "end_lat": 13.083,
+  "end_lon": 80.271,
+  "vessel": "AUV Explorer-4 (NIOT Hydrographic)",
+  "survey_id": "SRV-SAMPLE-SAMPLE-CRABPOT-1",
+  "swath_width_m": 100.0
+}

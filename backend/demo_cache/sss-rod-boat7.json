@@ -1,0 +1,58 @@
+{
+  "image_id": "demo-sss-rod-boat7",
+  "filename": "sss-rod-boat7.jpg",
+  "detections": [
+    {
+      "id": "det_f61c9c6f4fd6",
+      "class": "shipwreck",
+      "class_name": "shipwreck",
+      "confidence": 0.8168,
+      "model": "shipwreck_ship-model",
+      "bbox_px": [
+        449.0,
+        124.1,
+        582.4,
+        314.5
+      ],
+      "bbox_pct": {
+        "top": 0.17803,
+        "left": 0.70262,
+        "width": 0.20884,
+        "height": 0.27314
+      },
+      "lat": 12.6998048,
+      "lon": 80.4001997,
+      "quality_warning": false,
+      "quality_note": null
+    }
+  ],
+  "quality": {
+    "score": 1.0,
+    "status": "PASS",
+    "source": "image",
+    "flags": [],
+    "metrics": {
+      "saturation_ratio": 0.0009,
+      "dropout_row_count": 2,
+      "dynamic_range": 113.0
+    },
+    "config_hash": "69b82705761bb177e52becc9c3d9f636"
+  },
+  "processing_time_ms": 14.2,
+  "depth": 30.0,
+  "depth_m": 30.0,
+  "altitude": 8.5,
+  "altitude_m": 8.5,
+  "heading": 45.0,
+  "heading_deg": 45.0,
+  "coords": "12.7000, 80.4000",
+  "start_coords": "12.7000, 80.4000",
+  "end_coords": null,
+  "start_lat": 12.7,
+  "start_lon": 80.4,
+  "end_lat": null,
+  "end_lon": null,
+  "vessel": "RV Sagar Sandhan",
+  "survey_id": "SRV-SAMPLE-ROD-BOAT-7",
+  "swath_width_m": 100.0
+}

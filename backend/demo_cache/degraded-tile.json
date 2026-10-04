@@ -1,0 +1,37 @@
+{
+  "image_id": "demo-degraded-tile",
+  "filename": "degraded-tile.png",
+  "detections": [],
+  "quality": {
+    "score": 0.35,
+    "status": "DEGRADED",
+    "source": "image",
+    "flags": [
+      "Acoustic Clipping / Saturation (16.0% > 8.0%)",
+      "Acoustic Dropout (5 missing ping rows detected)"
+    ],
+    "metrics": {
+      "saturation_ratio": 0.16,
+      "dropout_row_count": 5,
+      "dynamic_range": 205.0
+    },
+    "config_hash": "69b82705761bb177e52becc9c3d9f636"
+  },
+  "processing_time_ms": 14.2,
+  "depth": 42.0,
+  "depth_m": 42.0,
+  "altitude": 8.5,
+  "altitude_m": 8.5,
+  "heading": 180.0,
+  "heading_deg": 180.0,
+  "coords": "13.0850, 80.2720",
+  "start_coords": "13.0850, 80.2720",
+  "end_coords": "13.0870, 80.2720",
+  "start_lat": 13.085,
+  "start_lon": 80.272,
+  "end_lat": 13.087,
+  "end_lon": 80.272,
+  "vessel": "AUV Explorer-4 (NIOT Hydrographic)",
+  "survey_id": "SRV-SAMPLE-SAMPLE-DEGRADED-1",
+  "swath_width_m": 100.0
+}

@@ -1,0 +1,58 @@
+{
+  "image_id": "demo-sss3",
+  "filename": "sss3.jpg",
+  "detections": [
+    {
+      "id": "det_0c51d72ec707",
+      "class": "shipwreck",
+      "class_name": "shipwreck",
+      "confidence": 0.8585,
+      "model": "shipwreck_ship-model",
+      "bbox_px": [
+        64.5,
+        130.1,
+        226.6,
+        227.2
+      ],
+      "bbox_pct": {
+        "top": 0.34047,
+        "left": 0.09217,
+        "width": 0.23152,
+        "height": 0.25438
+      },
+      "lat": 12.8002648,
+      "lon": 80.3499993,
+      "quality_warning": false,
+      "quality_note": null
+    }
+  ],
+  "quality": {
+    "score": 1.0,
+    "status": "PASS",
+    "source": "image",
+    "flags": [],
+    "metrics": {
+      "saturation_ratio": 0.0005,
+      "dropout_row_count": 0,
+      "dynamic_range": 123.0
+    },
+    "config_hash": "69b82705761bb177e52becc9c3d9f636"
+  },
+  "processing_time_ms": 14.2,
+  "depth": 28.0,
+  "depth_m": 28.0,
+  "altitude": 8.5,
+  "altitude_m": 8.5,
+  "heading": 90.0,
+  "heading_deg": 90.0,
+  "coords": "12.8000, 80.3500",
+  "start_coords": "12.8000, 80.3500",
+  "end_coords": null,
+  "start_lat": 12.8,
+  "start_lon": 80.35,
+  "end_lat": null,
+  "end_lon": null,
+  "vessel": "RV Sagar Sandhan",
+  "survey_id": "SRV-SAMPLE-SSS3",
+  "swath_width_m": 100.0
+}
