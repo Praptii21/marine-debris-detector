@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
-import { MapContainer, TileLayer, CircleMarker, Tooltip, Popup, useMap } from 'react-leaflet'
+import { useEffect, useRef, useState } from 'react'
+import { MapContainer, TileLayer, CircleMarker, Tooltip, Popup, GeoJSON, useMap } from 'react-leaflet'
 import { useNavigate } from 'react-router-dom'
-import { getDetections, getScanLines, getSurvey } from '../api/client.js'
+import { getDetections, getScanLines, getSurvey, getRiskZones } from '../api/client.js'
 import SonarCanvas from '../components/SonarCanvas.jsx'
 import { classLabel } from '../utils/taxonomy.js'
 import HeatmapLayer from '../components/HeatmapLayer.jsx'
@@ -56,14 +56,32 @@ export function getRiskColor(intensity) {
   return '#2196f3';                        // Low
 }
 
-function MapBoundsUpdater({ detections }) {
+// Measured-zone levels come from the backend (backend/risk.py::LEVELS).
+const LEVEL_COLOR = { Critical: '#d32f2f', High: '#ff9800', Moderate: '#ffeb3b', Low: '#2196f3' }
+
+function measuredPopupHtml(p) {
+  const pct = (v) => `${Math.round(v * 100)}%`
+  const bar = (label, v, w) =>
+    `<div style="display:flex;justify-content:space-between;font-size:11px"><span>${label} <span style="opacity:.6">(×${w})</span></span><b>${pct(v)}</b></div>`
+  return `
+    <div style="min-width:230px;font-family:inherit">
+      <div style="font-weight:700;font-size:14px;margin-bottom:4px">Measured risk — ${pct(p.risk)}</div>
+      <div style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;color:#fff;background:${LEVEL_COLOR[p.level]};margin-bottom:6px">${p.level} · data confidence ${p.data_confidence}</div>
+      ${bar('Density / surveyed km²', p.components.density, p.weights.density)}
+      ${bar('Worst-class severity', p.components.severity, p.weights.severity)}
+      ${bar('Reference prior', p.components.prior, p.weights.prior)}
+      <div style="font-weight:600;font-size:11.5px;margin:8px 0 3px">Why is this ${p.level.toLowerCase()}?</div>
+      <ul style="padding-left:16px;margin:0;font-size:11px;line-height:1.4">${p.reasons.map((r) => `<li>${r}</li>`).join('')}</ul>
+    </div>`
+}
+
+function MapBoundsUpdater({ points }) {
   const map = useMap();
   useEffect(() => {
-    const coords = detections.filter(d => d.location).map(d => [d.location.lat, d.location.lon]);
-    if (coords.length > 0) {
-      map.fitBounds(coords, { padding: [50, 50], maxZoom: 14 });
+    if (points && points.length > 0) {
+      map.fitBounds(points, { padding: [50, 50], maxZoom: 10 });
     }
-  }, [detections, map]);
+  }, [points, map]);
   return null;
 }
 
@@ -78,6 +96,12 @@ export default function MapView() {
   const [activeView, setActiveView] = useState('detections') // 'detections' | 'risk' | 'both'
   const [riskZones, setRiskZones] = useState([])
   const [mapInstance, setMapInstance] = useState(null)
+
+  // Data-driven risk layer: 'measured' (computed from surveys) or 'reference' (static)
+  const [riskSource, setRiskSource] = useState('reference')
+  const [hazard, setHazard] = useState('all') // all | navigation | ecological
+  const [measured, setMeasured] = useState({ features: [], metadata: null })
+  const [measuredError, setMeasuredError] = useState(null)
 
   // Fetch Existing API Data
   useEffect(() => {
@@ -94,6 +118,28 @@ export default function MapView() {
       .catch((err) => console.error('Error loading risk data:', err));
   }, [])
 
+  // Measured zones. Re-fetched when the hazard lens changes; flips to the
+  // measured view automatically the first time real survey data exists,
+  // unless the user already chose a source themselves.
+  const userPickedSource = useRef(false)
+  useEffect(() => {
+    let cancelled = false
+    getRiskZones(hazard)
+      .then((fc) => {
+        if (cancelled) return
+        setMeasured(fc)
+        setMeasuredError(null)
+        if (fc.features?.length && !userPickedSource.current) setRiskSource('measured')
+      })
+      .catch((err) => !cancelled && setMeasuredError(err.message))
+    return () => { cancelled = true }
+  }, [hazard])
+
+  const pickRiskSource = (src) => {
+    userPickedSource.current = true
+    setRiskSource(src)
+  }
+  const showMeasured = riskSource === 'measured'
   const imageByLineId = Object.fromEntries(lines.map((l) => [l.id, l.imageSrc]))
 
   // Grouped from the real scan lines rather than a separate list, so the
@@ -172,22 +218,181 @@ export default function MapView() {
         </div>
       </div>
 
+      {/* Sub-bar for Risk Mode & Hazard Lenses */}
+      {(activeView === 'risk' || activeView === 'both') && (
+        <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-dim)', textTransform: 'uppercase', letterSpacing: '.05em' }}>Risk Mode:</span>
+            <div style={{ display: 'inline-flex', background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 8, padding: 3, gap: 3 }}>
+              <button
+                type="button"
+                onClick={() => pickRiskSource('measured')}
+                style={{
+                  border: 'none',
+                  borderRadius: 6,
+                  padding: '5px 10px',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  background: showMeasured ? 'var(--ocean-deep)' : 'transparent',
+                  color: showMeasured ? '#fff' : 'var(--ink-dim)',
+                }}
+              >
+                Measured Density ({measured.features?.length || 0} cells)
+              </button>
+              <button
+                type="button"
+                onClick={() => pickRiskSource('reference')}
+                style={{
+                  border: 'none',
+                  borderRadius: 6,
+                  padding: '5px 10px',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  background: !showMeasured ? 'var(--ocean-deep)' : 'transparent',
+                  color: !showMeasured ? '#fff' : 'var(--ink-dim)',
+                }}
+              >
+                Reference Heuristic
+              </button>
+            </div>
+          </div>
+
+          {showMeasured && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-dim)' }}>Hazard Lens:</span>
+              <div style={{ display: 'inline-flex', background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 8, padding: 3, gap: 3 }}>
+                {[
+                  { id: 'all', label: 'All Hazards' },
+                  { id: 'navigation', label: 'Navigation (Mines/Wrecks)' },
+                  { id: 'ecological', label: 'Ecological (Nets/Pots)' },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setHazard(item.id)}
+                    style={{
+                      border: 'none',
+                      borderRadius: 6,
+                      padding: '5px 9px',
+                      fontSize: 11.5,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      background: hazard === item.id ? 'var(--ocean)' : 'transparent',
+                      color: hazard === item.id ? '#fff' : 'var(--ink-dim)',
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const pts = measured.features?.map((f) => [f.properties.center.lat, f.properties.center.lon])
+                  if (pts?.length) mapInstance?.fitBounds(pts, { padding: [50, 50], maxZoom: 10 })
+                }}
+                className="btn ghost"
+                style={{ padding: '5px 10px', fontSize: 11.5 }}
+                title="Fit map view to all measured survey grids"
+              >
+                📍 Zoom to Grids
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 18 }}>
         <div style={{ position: 'relative', height: 560, borderRadius: 'var(--radius)', overflow: 'hidden', border: '1px solid var(--border-strong)' }}>
-          <MapContainer center={[12.5, 76]} zoom={6} style={{ width: '100%', height: '100%' }} ref={setMapInstance}>
-            {activeView === 'detections' && <MapBoundsUpdater detections={detections} />}
+          <MapContainer center={[13.1, 79.0]} zoom={7} style={{ width: '100%', height: '100%' }} ref={setMapInstance}>
+            {activeView === 'detections' && (
+              <MapBoundsUpdater points={detections.filter((d) => d.location).map((d) => [d.location.lat, d.location.lon])} />
+            )}
+            {(activeView === 'risk' || activeView === 'both') && showMeasured && measured.features?.length > 0 && (
+              <MapBoundsUpdater points={measured.features.map((f) => [f.properties.center.lat, f.properties.center.lon])} />
+            )}
 
             {BASEMAPS[basemap].layers.map((layer, i) => (
               <TileLayer key={`${basemap}-${i}`} url={layer.url} attribution={layer.attribution} />
             ))}
 
-            {/* Heatmap Layer */}
-            {(activeView === 'risk' || activeView === 'both') && heatPoints.length > 0 && (
+            {/* Measured Risk Grid 1km Polygons (Visible on closer zoom) */}
+            {(activeView === 'risk' || activeView === 'both') && showMeasured && measured.features?.length > 0 && (
+              <GeoJSON
+                key={`measured-${hazard}-${measured.features.length}`}
+                data={measured}
+                style={(feature) => {
+                  const color = LEVEL_COLOR[feature.properties.level] || '#2196f3'
+                  return {
+                    fillColor: color,
+                    fillOpacity: 0.45,
+                    color: color,
+                    weight: 2,
+                  }
+                }}
+                onEachFeature={(feature, layer) => {
+                  layer.bindPopup(measuredPopupHtml(feature.properties))
+                }}
+              />
+            )}
+
+            {/* Distinct, High-Visibility Spot Markers for Measured Cells (Always bold & visible at any zoom) */}
+            {(activeView === 'risk' || activeView === 'both') &&
+              showMeasured &&
+              measured.features?.map((f) => {
+                const p = f.properties
+                const color = LEVEL_COLOR[p.level] || '#2196f3'
+                return (
+                  <CircleMarker
+                    key={`spot-${p.cell_id}`}
+                    center={[p.center.lat, p.center.lon]}
+                    radius={11}
+                    pathOptions={{
+                      fillColor: color,
+                      color: '#ffffff',
+                      weight: 2.5,
+                      fillOpacity: 0.95,
+                    }}
+                    eventHandlers={{
+                      click: () => mapInstance?.flyTo([p.center.lat, p.center.lon], 13),
+                      mouseover: (e) => e.target.setStyle({ radius: 14, weight: 3.5 }),
+                      mouseout: (e) => e.target.setStyle({ radius: 11, weight: 2.5 }),
+                    }}
+                  >
+                    <Tooltip direction="top" offset={[0, -10]}>
+                      <div style={{ fontFamily: 'var(--font-body)', padding: 3 }}>
+                        <div style={{ fontWeight: 700, fontSize: 13, color }}>
+                          {p.level} Risk — {Math.round(p.risk * 100)}%
+                        </div>
+                        <div style={{ fontSize: 11, color: '#2c3e50', marginTop: 2, fontWeight: 500 }}>
+                          Cell {p.cell_id} · {p.center.lat.toFixed(4)}°N, {p.center.lon.toFixed(4)}°E
+                        </div>
+                        <div style={{ fontSize: 11, color: '#555', marginTop: 2 }}>
+                          {p.detections} debris contact{p.detections !== 1 ? 's' : ''} / {p.area_km2.toFixed(2)} km² surveyed
+                        </div>
+                        <div style={{ fontSize: 10, color: '#888', marginTop: 3 }}>
+                          Click to view full mathematical reasoning →
+                        </div>
+                      </div>
+                    </Tooltip>
+                    <Popup>
+                      <div dangerouslySetInnerHTML={{ __html: measuredPopupHtml(p) }} />
+                    </Popup>
+                  </CircleMarker>
+                )
+              })}
+
+            {/* Fallback/Reference Heatmap Layer */}
+            {(activeView === 'risk' || activeView === 'both') && !showMeasured && heatPoints.length > 0 && (
               <HeatmapLayer points={heatPoints} />
             )}
 
-            {/* Clickable High-Risk Zone Circles & Tooltips */}
+            {/* Clickable High-Risk Zone Circles & Tooltips (Reference Heuristic) */}
             {(activeView === 'risk' || activeView === 'both') &&
+              !showMeasured &&
               riskZones
                 .filter((z) => z.intensity >= 0.65)
                 .map((zone) => (
@@ -289,41 +494,100 @@ export default function MapView() {
               </div>
             )}
 
-            {(activeView === 'risk' || activeView === 'both') && <RiskLegend />}
+            {(activeView === 'risk' || activeView === 'both') && (
+              showMeasured ? (
+                <div style={{ background: 'var(--glass)', border: '1px solid var(--border-strong)', borderRadius: 8, padding: '10px 14px', fontSize: 11.5, color: 'var(--ink-dim)', maxWidth: 220 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink)', marginBottom: 6 }}>
+                    Measured Risk Level
+                  </div>
+                  <LegendRow color={LEVEL_COLOR.Critical} label="Critical (≥65%)" />
+                  <LegendRow color={LEVEL_COLOR.High} label="High (50–64%)" />
+                  <LegendRow color={LEVEL_COLOR.Moderate} label="Moderate (30–49%)" />
+                  <LegendRow color={LEVEL_COLOR.Low} label="Low (<30%)" />
+                  <div style={{ marginTop: 8, paddingTop: 6, borderTop: '1px solid var(--border)', fontSize: 10, color: 'var(--ink-faint)' }}>
+                    Normalized per surveyed km² + class severity
+                  </div>
+                </div>
+              ) : (
+                <RiskLegend />
+              )
+            )}
           </div>
         </div>
 
         {/* Dynamic Right Sidebar */}
         <div className="card">
           {activeView === 'risk' ? (
-            <>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>
-                <h3 style={{ fontSize: 16 }}>Top Risk Zones</h3>
-                <span style={{ fontSize: 12, color: 'var(--ink-faint)' }}>{riskZones.filter(z => z.intensity >= 0.8).length} critical</span>
-              </div>
-              <div style={{ overflowY: 'auto', maxHeight: '500px' }}>
-                {[...riskZones]
-                  .sort((a, b) => b.intensity - a.intensity)
-                  .slice(0, 10)
-                  .map((zone) => (
-                    <div
-                      key={zone.id || zone.zone_name}
-                      onClick={() => mapInstance?.flyTo([zone.lat, zone.lng], 9)}
-                      style={{ padding: '13px 18px', borderBottom: '1px solid var(--border)', cursor: 'pointer' }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div style={{ fontSize: 13.5, color: 'var(--ink)', marginBottom: 3, fontWeight: 500 }}>{zone.zone_name}</div>
-                        <div style={{ fontSize: 10, fontWeight: 'bold', padding: '2px 6px', borderRadius: 4, color: '#fff', backgroundColor: getRiskColor(zone.intensity) }}>
-                          {(zone.intensity * 100).toFixed(0)}%
+            showMeasured ? (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>
+                  <h3 style={{ fontSize: 16 }}>Measured Grids</h3>
+                  <span style={{ fontSize: 12, color: 'var(--ink-faint)' }}>{measured.features?.length || 0} cells</span>
+                </div>
+                <div style={{ overflowY: 'auto', maxHeight: '500px' }}>
+                  {measured.features?.length > 0 ? (
+                    measured.features.map((f) => {
+                      const p = f.properties
+                      return (
+                        <div
+                          key={p.cell_id}
+                          onClick={() => mapInstance?.flyTo([p.center.lat, p.center.lon], 13)}
+                          style={{ padding: '13px 18px', borderBottom: '1px solid var(--border)', cursor: 'pointer' }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ fontSize: 13.5, color: 'var(--ink)', marginBottom: 3, fontWeight: 500 }}>
+                              Cell {p.cell_id}
+                            </div>
+                            <div style={{ fontSize: 10, fontWeight: 'bold', padding: '2px 6px', borderRadius: 4, color: '#fff', backgroundColor: LEVEL_COLOR[p.level] }}>
+                              {p.level} {Math.round(p.risk * 100)}%
+                            </div>
+                          </div>
+                          <div className="mono" style={{ fontSize: 11, color: 'var(--ink-faint)' }}>
+                            {p.center.lat.toFixed(4)}°N, {p.center.lon.toFixed(4)}°E
+                          </div>
+                          <div style={{ fontSize: 11, color: 'var(--ink-dim)', marginTop: 4 }}>
+                            {p.detections} debris · {p.area_km2.toFixed(2)} km² surveyed
+                          </div>
+                        </div>
+                      )
+                    })
+                  ) : (
+                    <div style={{ padding: '20px 18px', fontSize: 12, color: 'var(--ink-faint)', lineHeight: 1.5 }}>
+                      No surveyed transects in database yet. Detections uploaded with GPS coordinates automatically populate measured risk cells.
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>
+                  <h3 style={{ fontSize: 16 }}>Top Risk Zones</h3>
+                  <span style={{ fontSize: 12, color: 'var(--ink-faint)' }}>{riskZones.filter(z => z.intensity >= 0.8).length} critical</span>
+                </div>
+                <div style={{ overflowY: 'auto', maxHeight: '500px' }}>
+                  {[...riskZones]
+                    .sort((a, b) => b.intensity - a.intensity)
+                    .slice(0, 10)
+                    .map((zone) => (
+                      <div
+                        key={zone.id || zone.zone_name}
+                        onClick={() => mapInstance?.flyTo([zone.lat, zone.lng], 9)}
+                        style={{ padding: '13px 18px', borderBottom: '1px solid var(--border)', cursor: 'pointer' }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div style={{ fontSize: 13.5, color: 'var(--ink)', marginBottom: 3, fontWeight: 500 }}>{zone.zone_name}</div>
+                          <div style={{ fontSize: 10, fontWeight: 'bold', padding: '2px 6px', borderRadius: 4, color: '#fff', backgroundColor: getRiskColor(zone.intensity) }}>
+                            {(zone.intensity * 100).toFixed(0)}%
+                          </div>
+                        </div>
+                        <div className="mono" style={{ fontSize: 11, color: 'var(--ink-faint)' }}>
+                          {zone.lat.toFixed(4)}°N, {zone.lng.toFixed(4)}°E
                         </div>
                       </div>
-                      <div className="mono" style={{ fontSize: 11, color: 'var(--ink-faint)' }}>
-                        {zone.lat.toFixed(4)}°N, {zone.lng.toFixed(4)}°E
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </>
+                    ))}
+                </div>
+              </>
+            )
           ) : (
             <>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>

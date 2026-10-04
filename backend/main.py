@@ -43,7 +43,11 @@ from db import (
     annotated_image_count,
     iter_export_labels,
     iter_export_images,
+    save_detections_and_coverage,
+    get_coverage,
+    fetch_risk_inputs,
 )
+from risk import compute_risk_zones, HAZARD_CLASSES
 
 import sys
 import numpy as np
@@ -207,6 +211,7 @@ class DetectMetadata(BaseModel):
     lat: Optional[float] = None
     lon: Optional[float] = None
     heading_deg: Optional[float] = None
+    swath_width_m: Optional[float] = None
 
 
 def _iou(a: List[float], b: List[float]) -> float:
@@ -292,7 +297,8 @@ async def detect(file: UploadFile = File(...), metadata: Optional[str] = Form(No
     nav = None
     if meta.lat is not None and meta.lon is not None:
         nav = VesselNav(lat=meta.lat, lon=meta.lon, heading_deg=meta.heading_deg or 0.0)
-    geometry = SonarGeometry(swath_width_m=DEFAULT_SWATH_WIDTH_M, slant_range_corrected=True)
+    swath_m = meta.swath_width_m or DEFAULT_SWATH_WIDTH_M
+    geometry = SonarGeometry(swath_width_m=swath_m, slant_range_corrected=True)
 
     start = time.perf_counter()
     pooled: List[dict] = []
@@ -345,6 +351,21 @@ async def detect(file: UploadFile = File(...), metadata: Optional[str] = Form(No
     _last_inference_ms = elapsed_ms
 
     log_event("detect", {"image_id": image_id, "count": len(detections), "elapsed_ms": elapsed_ms})
+
+    # Risk-zone inputs: the surveyed footprint (denominator for detections per
+    # km^2) plus the georeferenced detections. Along-track length assumes
+    # square pixels, i.e. the same m/px as the across-track georeferencing.
+    # Never allowed to break /detect itself.
+    if nav is not None:
+        try:
+            length_m = height * (swath_m / width)
+            save_detections_and_coverage(image_id, detections, {
+                "lat": nav.lat, "lon": nav.lon, "heading_deg": nav.heading_deg,
+                "swath_width_m": swath_m, "length_m": length_m,
+                "area_km2": swath_m * length_m / 1e6, "img_w": width, "img_h": height,
+            })
+        except Exception as exc:
+            print(f"[risk] could not persist coverage for {image_id}: {exc}")
 
     return {
         "image_id": image_id,
@@ -449,6 +470,10 @@ class Annotation(BaseModel):
     # "Reject Detection" call: the box is logged as a hard negative rather
     # than written into the YOLO label file as a positive example.
     rejected: bool = False
+    # Filled in server-side from the image's stored nav fix (see
+    # save_annotations) so operator-drawn boxes can contribute to risk zones.
+    lat: Optional[float] = None
+    lon: Optional[float] = None
 
 
 @app.post("/annotations")
@@ -459,6 +484,22 @@ async def save_annotations(annotations: List[Annotation]):
     by_image: Dict[str, List[Annotation]] = {}
     for a in annotations:
         by_image.setdefault(a.image_id, []).append(a)
+
+    # Geocode each box from its image's stored nav fix. Best-effort: images
+    # without a fix (or a failed lookup) simply stay un-located.
+    for image_id, items in by_image.items():
+        try:
+            cov = get_coverage(image_id)
+            if not cov:
+                continue
+            nav = VesselNav(lat=cov["lat"], lon=cov["lon"], heading_deg=cov["heading_deg"] or 0.0)
+            geom = SonarGeometry(swath_width_m=cov["swath_width_m"], slant_range_corrected=True)
+            for a in items:
+                cx, cy = a.bbox_normalized[0], a.bbox_normalized[1]
+                px, py = cx * cov["img_w"], cy * cov["img_h"]
+                a.lat, a.lon = georeference_yolo_bbox([px, py, px, py], cov["img_w"], cov["img_h"], nav, geom)
+        except Exception as exc:
+            print(f"[risk] could not geocode annotations for {image_id}: {exc}")
 
     saved, rejected = save_annotation_batch(by_image, _IMAGE_CACHE)
 
@@ -480,6 +521,30 @@ def export_annotations():
         media_type="application/zip",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
+
+
+# -- Risk zones ---------------------------------------------------------------------
+
+_PRIORS_PATH = BASE_DIR / "data" / "risk_priors.json"
+
+
+def _load_priors() -> list:
+    try:
+        return json.loads(_PRIORS_PATH.read_text(encoding="utf-8")).get("risk_zones", [])
+    except Exception as exc:
+        print(f"[risk] priors unavailable ({exc}); scoring without the static prior")
+        return []
+
+
+@app.get("/risk-zones")
+def risk_zones(hazard: str = "all", cell_km: float = 1.0):
+    """Data-driven risk zones as GeoJSON. Only surveyed cells are returned —
+    unsurveyed areas are unknown, not safe. See docs/RISK_ZONES.md."""
+    if hazard not in HAZARD_CLASSES:
+        raise HTTPException(status_code=400, detail=f"hazard must be one of {sorted(HAZARD_CLASSES)}")
+    cell_km = min(max(cell_km, 0.25), 25.0)
+    events, coverage = fetch_risk_inputs()
+    return compute_risk_zones(events, coverage, _load_priors(), cell_km=cell_km, hazard=hazard)
 
 
 # -- Health -----------------------------------------------------------------------
