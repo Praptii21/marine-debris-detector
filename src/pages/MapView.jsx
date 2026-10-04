@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Tooltip, Popup, GeoJSON, useMap } from 'react-leaflet'
 import { useNavigate } from 'react-router-dom'
 import { getDetections, getScanLines, getSurvey, getRiskZones } from '../api/client.js'
+import { demoRiskData } from '../api/demoRiskData.js'
 import SonarCanvas from '../components/SonarCanvas.jsx'
 import { classLabel } from '../utils/taxonomy.js'
 import HeatmapLayer from '../components/HeatmapLayer.jsx'
@@ -77,9 +78,14 @@ function measuredPopupHtml(p) {
 
 function MapBoundsUpdater({ points }) {
   const map = useMap();
+  const lastKeyRef = useRef('');
   useEffect(() => {
     if (points && points.length > 0) {
-      map.fitBounds(points, { padding: [50, 50], maxZoom: 10 });
+      const key = points.map((p) => `${p[0].toFixed(3)},${p[1].toFixed(3)}`).join(';');
+      if (lastKeyRef.current !== key) {
+        lastKeyRef.current = key;
+        map.fitBounds(points, { padding: [50, 50], maxZoom: 9 });
+      }
     }
   }, [points, map]);
   return null;
@@ -92,15 +98,15 @@ export default function MapView() {
   const [lines, setLines] = useState([])
   const [basemap, setBasemap] = useState('map')
 
-  // New state for Heatmap Feature
-  const [activeView, setActiveView] = useState('detections') // 'detections' | 'risk' | 'both'
+  // View state: 'both' by default so new risk features & hazard lenses are immediately visible
+  const [activeView, setActiveView] = useState('both') // 'detections' | 'risk' | 'both'
   const [riskZones, setRiskZones] = useState([])
   const [mapInstance, setMapInstance] = useState(null)
 
   // Data-driven risk layer: 'measured' (computed from surveys) or 'reference' (static)
-  const [riskSource, setRiskSource] = useState('reference')
+  const [riskSource, setRiskSource] = useState('measured')
   const [hazard, setHazard] = useState('all') // all | navigation | ecological
-  const [measured, setMeasured] = useState({ features: [], metadata: null })
+  const [measured, setMeasured] = useState(demoRiskData?.all || { features: [], metadata: null })
   const [measuredError, setMeasuredError] = useState(null)
 
   // Fetch Existing API Data
@@ -186,10 +192,14 @@ export default function MapView() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           {/* View Toggle */}
           <div style={{ display: 'flex', gap: 4, background: 'var(--glass)', border: '1px solid var(--border-strong)', borderRadius: 10, padding: 4 }}>
-            {['detections', 'risk', 'both'].map((view) => (
+            {[
+              { id: 'both', label: 'Overlay (All)' },
+              { id: 'risk', label: 'Risk Map' },
+              { id: 'detections', label: 'Detections Only' },
+            ].map(({ id, label }) => (
               <button
-                key={view}
-                onClick={() => setActiveView(view)}
+                key={id}
+                onClick={() => setActiveView(id)}
                 style={{
                   border: 'none',
                   borderRadius: 7,
@@ -197,12 +207,12 @@ export default function MapView() {
                   fontSize: 12.5,
                   fontWeight: 600,
                   cursor: 'pointer',
-                  background: activeView === view ? 'var(--ocean-deep)' : 'transparent',
-                  color: activeView === view ? '#fff' : 'var(--ink-dim)',
-                  textTransform: 'capitalize'
+                  background: activeView === id ? 'var(--ocean-deep)' : 'transparent',
+                  color: activeView === id ? '#fff' : 'var(--ink-dim)',
+                  transition: 'all 0.15s ease',
                 }}
               >
-                {view === 'both' ? 'Both (Overlay)' : view}
+                {label}
               </button>
             ))}
           </div>
@@ -517,7 +527,7 @@ export default function MapView() {
 
         {/* Dynamic Right Sidebar */}
         <div className="card">
-          {activeView === 'risk' ? (
+          {activeView === 'risk' || activeView === 'both' ? (
             showMeasured ? (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>

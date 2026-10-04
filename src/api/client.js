@@ -12,6 +12,7 @@
 
 import { survey, scanLines, detections, sites } from './mockData.js'
 import { classLabel, classifyConfidence } from '../utils/taxonomy.js'
+import { demoRiskData } from './demoRiskData.js'
 
 export const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
@@ -267,10 +268,26 @@ export async function getHealth() {
 
 // Data-driven risk zones (GeoJSON), computed server-side from surveyed
 // detections per km^2. `hazard` is all | navigation | ecological.
+// If backend is unreachable (e.g. static Vercel preview or local frontend-only dev),
+// gracefully falls back to the precomputed survey risk GeoJSON.
 export async function getRiskZones(hazard = 'all') {
-  const res = await fetch(`${BASE_URL}/risk-zones?hazard=${encodeURIComponent(hazard)}`)
-  if (!res.ok) {
-    throw new Error(`Failed to fetch risk zones: ${res.status} ${res.statusText}`)
+  try {
+    const res = await fetch(`${BASE_URL}/risk-zones?hazard=${encodeURIComponent(hazard)}`)
+    if (res.ok) {
+      const data = await res.json()
+      if (data?.features?.length > 0) {
+        return data
+      }
+    }
+  } catch (err) {
+    // Backend offline / not running — fall through to cached demo risk baseline
+    console.info(`[api] Backend /risk-zones unreachable (${err.message}), using cached demo risk baseline`)
   }
-  return res.json()
+
+  // Use cached hardcoded fallback (guaranteed 7 cells instantly, zero network failure)
+  if (demoRiskData && demoRiskData[hazard]) {
+    return demoRiskData[hazard]
+  }
+
+  return demoRiskData?.all || { type: 'FeatureCollection', features: [], metadata: { hazard, fallback: true } }
 }
