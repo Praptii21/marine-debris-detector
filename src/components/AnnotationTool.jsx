@@ -214,15 +214,7 @@ export default function AnnotationTool({
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
             >
               {boxes.map((b) => {
-                const isQualityWarning = b.quality_warning === true
-                const baseStyle = VARIANT_STYLE[b.variant] || VARIANT_STYLE['needs-review']
-
-                // When detection.quality_warning === true, render with dashed amber/red border
-                // When quality_warning === false, render standard solid green/cyan box
-                const strokeColor = isQualityWarning ? '#f59e0b' : baseStyle.stroke
-                const strokeDash = isQualityWarning ? '6 4' : (b.selected ? 'none' : baseStyle.dash)
-                const strokeWidth = b.selected ? 3 : (isQualityWarning ? 2 : 1.5)
-
+                const style = VARIANT_STYLE[b.variant] || VARIANT_STYLE['needs-review']
                 return (
                   <rect
                     key={b.id}
@@ -230,16 +222,15 @@ export default function AnnotationTool({
                     y={b.bboxPct.top * 100}
                     width={b.bboxPct.width * 100}
                     height={b.bboxPct.height * 100}
-                    fill={b.selected ? `${strokeColor}26` : 'transparent'}
-                    stroke={strokeColor}
-                    strokeWidth={strokeWidth}
-                    strokeDasharray={strokeDash}
+                    fill={b.selected ? `${style.stroke}26` : 'transparent'}
+                    stroke={style.stroke}
+                    strokeWidth={b.selected ? 3 : 1.5}
+                    strokeDasharray={b.selected ? 'none' : style.dash}
                     vectorEffect="non-scaling-stroke"
-                    className={isQualityWarning ? 'border-dashed border-amber-500' : ''}
                     style={{
                       pointerEvents: drawMode ? 'none' : 'auto',
                       cursor: 'pointer',
-                      filter: b.selected ? `drop-shadow(0 0 4px ${strokeColor}aa)` : 'none',
+                      filter: b.selected ? `drop-shadow(0 0 4px ${style.stroke}aa)` : 'none',
                     }}
                     onClick={() => onSelectBox(b.id)}
                   />
@@ -261,18 +252,8 @@ export default function AnnotationTool({
             </svg>
 
             {boxes.map((b) => {
-              const isQualityWarning = b.quality_warning === true
               const anchorRight = b.bboxPct.left > 0.5
-              const baseStyle = VARIANT_STYLE[b.variant] || VARIANT_STYLE['needs-review']
-
-              // When detection.quality_warning === true, append [Low Data Quality] to class label tag
-              const displayLabel = isQualityWarning && !b.label.includes('[Low Data Quality]')
-                ? `${b.label} [Low Data Quality]`
-                : b.label
-
-              const tagBg = isQualityWarning ? '#d97706' : baseStyle.stroke
-              const tagColor = isQualityWarning ? '#ffffff' : '#04211f'
-              const tagBorder = isQualityWarning ? '1px dashed #f59e0b' : 'none'
+              const style = VARIANT_STYLE[b.variant] || VARIANT_STYLE['needs-review']
 
               return (
                 <span
@@ -286,9 +267,8 @@ export default function AnnotationTool({
                       ? { right: `${Math.max(0, 1 - (b.bboxPct.left + b.bboxPct.width)) * 100}%` }
                       : { left: `${b.bboxPct.left * 100}%` }),
                     transform: 'translateY(-100%)',
-                    background: tagBg,
-                    color: tagColor,
-                    border: tagBorder,
+                    background: style.stroke,
+                    color: '#04211f',
                     fontSize: 10.5,
                     fontWeight: 600,
                     padding: '2px 6px',
@@ -296,10 +276,9 @@ export default function AnnotationTool({
                     whiteSpace: 'nowrap',
                     cursor: 'pointer',
                     pointerEvents: drawMode ? 'none' : 'auto',
-                    boxShadow: isQualityWarning ? '0 1px 4px rgba(217,119,6,0.5)' : 'none',
                   }}
                 >
-                  {displayLabel}
+                  {b.label}
                 </span>
               )
             })}
